@@ -3,8 +3,12 @@ import { defineStore } from 'pinia'
 import { login as loginRequest, logout as logoutRequest, refreshToken as refreshTokenRequest } from '../api/auth'
 import type { TokenResponse, UserInfo, UserRole } from '../types/auth'
 
-function resolveHomePath(role?: UserRole | null) {
-  switch (role) {
+function resolveHomePath(role?: UserRole | null | number) {
+  // 兼容后端返回数字枚举的情况（0=SuperAdmin,1=BackendCustom,2=Sales,3=Client）
+  const roleStr = typeof role === 'number'
+    ? (['SuperAdmin', 'BackendCustom', 'Sales', 'Client'][role] ?? null)
+    : role
+  switch (roleStr) {
     case 'Sales':
       return '/sales'
     case 'Client':
@@ -13,7 +17,7 @@ function resolveHomePath(role?: UserRole | null) {
     case 'BackendCustom':
       return '/admin'
     default:
-      return '/auth/login'
+      return null
   }
 }
 

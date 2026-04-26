@@ -35,7 +35,8 @@ async function handleSubmit() {
 
   try {
     await authStore.login(form.username, form.password)
-    await router.replace(authStore.homePath)
+    const dest = authStore.homePath
+    await router.replace(dest ?? '/admin')
   } catch {
     errorMessage.value = t('auth.loginFailed')
   } finally {

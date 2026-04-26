@@ -58,14 +58,14 @@ services:
       - shareflow-net
 
   redis-overseas:
-    image: redis:7
+    image: redis:7-alpine
     ports:
       - "6380:6379"
     networks:
       - shareflow-net
 
   redis-domestic:
-    image: redis:7
+    image: redis:7-alpine
     ports:
       - "6381:6379"
     networks:
