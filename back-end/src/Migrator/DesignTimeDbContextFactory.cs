@@ -15,10 +15,11 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
             .Build();
 
         var connectionString = config.GetConnectionString("Default")
-            ?? "Host=localhost;Database=shareflow;Username=postgres;Password=postgres";
+            ?? "Host=localhost;Port=5433;Database=shareflow_overseas;Username=shareflow;Password=shareflow";
 
         var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-        optionsBuilder.UseNpgsql(connectionString);
+        optionsBuilder.UseNpgsql(connectionString,
+            b => b.MigrationsAssembly("ShareFlow.Migrator"));
 
         return new AppDbContext(optionsBuilder.Options);
     }

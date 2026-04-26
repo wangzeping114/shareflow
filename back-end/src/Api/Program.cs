@@ -5,16 +5,23 @@ using FluentValidation.AspNetCore;
 using Mapster;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Quartz;
 using Serilog;
+using ShareFlow.Api.Filters;
 using ShareFlow.Api.Middleware;
+using ShareFlow.Application.Auth;
+using ShareFlow.Application.Auth.Interfaces;
+using ShareFlow.Application.Common.Interfaces;
 using ShareFlow.Application;
 using ShareFlow.Infrastructure;
 using ShareFlow.Infrastructure.Jobs;
 using ShareFlow.Infrastructure.Persistence;
 using System.Reflection;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -37,6 +44,9 @@ builder.Host.ConfigureContainer<ContainerBuilder>(cb =>
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
+builder.Services.AddHttpContextAccessor();
+
 // JWT
 var jwtKey = builder.Configuration["Jwt:SecretKey"]!;
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -50,7 +60,27 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidateAudience = true,
             ValidAudience = builder.Configuration["Jwt:Audience"],
-            ClockSkew = TimeSpan.Zero
+            ClockSkew = TimeSpan.Zero,
+            NameClaimType = ClaimTypes.Name,
+            RoleClaimType = ClaimTypes.Role
+        };
+        opt.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var jti = context.Principal?.FindFirstValue(JwtRegisteredClaimNames.Jti);
+                if (string.IsNullOrWhiteSpace(jti))
+                {
+                    return;
+                }
+
+                var redisService = context.HttpContext.RequestServices.GetRequiredService<IRedisService>();
+                var exists = await redisService.KeyExistsAsync($"token:blacklist:{jti}");
+                if (exists)
+                {
+                    context.Fail("Token has been revoked.");
+                }
+            }
         };
     });
 
@@ -69,6 +99,7 @@ builder.Services.AddValidatorsFromAssembly(typeof(ApplicationModule).Assembly);
 builder.Services.AddShareFlowJobScheduling();
 
 builder.Services.AddControllers();
+builder.Services.AddAuthorization();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -95,6 +126,12 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var seedService = scope.ServiceProvider.GetRequiredService<IIdentitySeedService>();
+    await seedService.SeedAsync();
+}
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseSerilogRequestLogging();

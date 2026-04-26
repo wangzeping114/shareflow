@@ -1,5 +1,7 @@
 using Autofac;
+using Microsoft.Extensions.Configuration;
 using ShareFlow.Domain.Interfaces;
+using StackExchange.Redis;
 
 namespace ShareFlow.Infrastructure;
 
@@ -11,9 +13,20 @@ public class InfrastructureModule : Module
             .As<IRegionContext>()
             .SingleInstance();
 
+        builder.Register(context =>
+            ConnectionMultiplexer.Connect(
+                context.Resolve<IConfiguration>().GetSection("Redis")["ConnectionString"] ?? "localhost:6379"))
+            .As<IConnectionMultiplexer>()
+            .SingleInstance();
+
         // Repositories 自动注册（后续 Epic 持续补充）
         builder.RegisterAssemblyTypes(ThisAssembly)
             .Where(t => t.Name.EndsWith("Repository"))
+            .AsImplementedInterfaces()
+            .InstancePerLifetimeScope();
+
+        builder.RegisterAssemblyTypes(ThisAssembly)
+            .Where(t => t.Name.EndsWith("Service"))
             .AsImplementedInterfaces()
             .InstancePerLifetimeScope();
     }
