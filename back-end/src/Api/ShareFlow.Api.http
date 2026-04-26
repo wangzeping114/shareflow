@@ -1,0 +1,6 @@
+@ShareFlow.Api_HostAddress = http://localhost:5129
+
+GET {{ShareFlow.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

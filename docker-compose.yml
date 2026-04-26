@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  shareflow-api-overseas:
+    build:
+      context: ./back-end
+      dockerfile: Dockerfile
+    environment:
+      - REGION=overseas
+    ports:
+      - "5001:80"
+    depends_on:
+      - postgres-overseas
+      - redis-overseas
+    networks:
+      - shareflow-net
+    restart: always
+
+  shareflow-api-domestic:
+    build:
+      context: ./back-end
+      dockerfile: Dockerfile
+    environment:
+      - REGION=domestic
+    ports:
+      - "5002:80"
+    depends_on:
+      - postgres-domestic
+      - redis-domestic
+    networks:
+      - shareflow-net
+    restart: always
+
+  postgres-overseas:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: shareflow
+      POSTGRES_PASSWORD: shareflow
+      POSTGRES_DB: shareflow_overseas
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata-overseas:/var/lib/postgresql/data
+    networks:
+      - shareflow-net
+
+  postgres-domestic:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: shareflow
+      POSTGRES_PASSWORD: shareflow
+      POSTGRES_DB: shareflow_domestic
+    ports:
+      - "5434:5432"
+    volumes:
+      - pgdata-domestic:/var/lib/postgresql/data
+    networks:
+      - shareflow-net
+
+  redis-overseas:
+    image: redis:7
+    ports:
+      - "6380:6379"
+    networks:
+      - shareflow-net
+
+  redis-domestic:
+    image: redis:7
+    ports:
+      - "6381:6379"
+    networks:
+      - shareflow-net
+
+  front-end:
+    build:
+      context: ./front-end
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80"
+    networks:
+      - shareflow-net
+    depends_on:
+      - shareflow-api-overseas
+      - shareflow-api-domestic
+    restart: always
+
+networks:
+  shareflow-net:
+    driver: bridge
+
+volumes:
+  pgdata-overseas:
+  pgdata-domestic:
