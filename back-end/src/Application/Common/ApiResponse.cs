@@ -20,4 +20,21 @@ public class PagedResult<T>
     public int Total { get; set; }
     public int Page { get; set; }
     public int PageSize { get; set; }
+
+    /// <summary>
+    /// 从仓储返回的 (Items, Total) 元组和 Mapster 映射函数构造分页结果。
+    /// 消除 Service 层手动赋值四个字段的样板代码。
+    /// </summary>
+    public static PagedResult<TDto> MapFrom<TEntity, TDto>(
+        (IReadOnlyList<TEntity> Items, int Total) paged,
+        int page,
+        int pageSize,
+        Func<IReadOnlyList<TEntity>, IReadOnlyList<TDto>> mapItems)
+        => new()
+        {
+            Items = mapItems(paged.Items),
+            Total = paged.Total,
+            Page = page,
+            PageSize = pageSize,
+        };
 }

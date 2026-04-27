@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ShareFlow.Infrastructure.Persistence;
@@ -12,9 +13,11 @@ using ShareFlow.Infrastructure.Persistence;
 namespace ShareFlow.Migrator.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260427122706_Epic2_VideoProject")]
+    partial class Epic2_VideoProject
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -288,8 +291,8 @@ namespace ShareFlow.Migrator.Migrations
 
                     b.Property<string>("PlatformName")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("platform_name");
 
                     b.Property<string>("SlotMode")
@@ -309,11 +312,6 @@ namespace ShareFlow.Migrator.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)")
                         .HasColumnName("title");
-
-                    b.Property<decimal?>("TotalInvestment")
-                        .HasPrecision(15, 2)
-                        .HasColumnType("numeric(15,2)")
-                        .HasColumnName("total_investment");
 
                     b.Property<int>("TotalSlots")
                         .HasColumnType("integer")

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { NButton } from 'naive-ui'
+import { NButton, NMessageProvider, NDialogProvider, NNotificationProvider } from 'naive-ui'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
@@ -23,6 +23,9 @@ async function handleLogout() {
 </script>
 
 <template>
+  <n-message-provider>
+    <n-notification-provider>
+      <n-dialog-provider>
   <div class="app-shell">
     <header class="app-header">
       <div>
@@ -39,6 +42,9 @@ async function handleLogout() {
       <router-view />
     </main>
   </div>
+      </n-dialog-provider>
+    </n-notification-provider>
+  </n-message-provider>
 </template>
 
 <style scoped>

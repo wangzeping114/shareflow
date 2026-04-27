@@ -8,10 +8,10 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
     public DbSet<User> Users => Set<User>();
-
     public DbSet<BackendRole> BackendRoles => Set<BackendRole>();
-
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<VideoProject> VideoProjects => Set<VideoProject>();
+    public DbSet<ProjectSlot> ProjectSlots => Set<ProjectSlot>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

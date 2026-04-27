@@ -30,6 +30,16 @@ const router = createRouter({
           name: 'admin-home',
           component: () => import('../views/admin/AdminHomeView.vue'),
         },
+        {
+          path: 'projects',
+          name: 'admin-projects',
+          component: () => import('../views/admin/projects/ProjectListView.vue'),
+        },
+        {
+          path: 'projects/:id',
+          name: 'admin-project-detail',
+          component: () => import('../views/admin/projects/ProjectDetailView.vue'),
+        },
       ],
     },
     {
