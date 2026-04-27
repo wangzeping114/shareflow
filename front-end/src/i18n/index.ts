@@ -21,10 +21,10 @@ const messages = {
     dashboard: {
       admin: '管理员工作台',
       sales: '销售工作台',
-      client: '投资人门户',
+      client: '持股客户门户',
       adminDesc: '你已登录后台管理区域。',
       salesDesc: '你已登录销售工作区域。',
-      clientDesc: '你已登录投资人客户端。',
+      clientDesc: '你已登录持股客户端。',
     },
   },
   'en-US': {
@@ -54,11 +54,11 @@ const messages = {
   },
 }
 
-const { locale } = useRegion()
+const { adminLocale } = useRegion()
 
 export const i18n = createI18n({
   legacy: false,
-  locale,
-  fallbackLocale: 'en-US',
+  locale: adminLocale, // 默认中文（Admin/Sales 固定 zh-CN）
+  fallbackLocale: 'zh-CN',
   messages,
 })

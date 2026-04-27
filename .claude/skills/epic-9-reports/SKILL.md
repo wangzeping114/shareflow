@@ -1,6 +1,6 @@
 ---
 name: epic-9-reports
-description: 执行 Epic 9 —— 报表与数据导出（收益报表、分红报表、投资人汇总、ECharts 图表、Excel/CSV 导出）。依赖 Epic 5/6 已完成。
+description: 执行 Epic 9 —— 报表与数据导出（收益报表、分红报表、客户汇总、ECharts 图表、Excel/CSV 导出）。依赖 Epic 5/6 已完成。
 ---
 
 # Epic 9 — 报表与数据导出
@@ -72,11 +72,11 @@ public class ExcelExportService : IExcelExportService
 ```
 GET /v1/admin/reports/revenue             Revenue 统计 (ByMonth + ByPlatform)
 GET /v1/admin/reports/dividend            Dividend 统计
-GET /v1/admin/reports/investors           投资人汇总
+GET /v1/admin/reports/clients             客户汇总
 GET /v1/admin/reports/projects/{id}       单项目绩效
 GET /v1/admin/reports/revenue/export      → application/vnd.openxmlformats (Excel)
 GET /v1/admin/reports/dividend/export
-GET /v1/admin/reports/investors/export
+GET /v1/admin/reports/clients/export
 ```
 
 ### 前端
@@ -92,10 +92,10 @@ GET /v1/admin/reports/investors/export
 
 **`DividendReportView.vue`**
 - 柱状图：各项目分红金额对比
-- 表格：分投资人分红汇总
+- 表格：分客户分红汇总
 
-**`InvestorSummaryView.vue`**
-- 表格列：投资人、总投入、总分红、ROI%、钱包余额
+**`ClientSummaryView.vue`**
+- 表格列：客户名称、持股比例、已收分红、鑉包余额
 - 导出按钮
 
 #### `composables/useExportDownload.ts`

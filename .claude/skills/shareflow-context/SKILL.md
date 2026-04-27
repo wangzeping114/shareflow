@@ -8,8 +8,9 @@ description: ShareFlow 项目全局上下文。执行任何 ShareFlow 开发任�
 ## 项目概述
 
 ShareFlow 是短视频持股分红平台，采用**同一套代码库、双实例部署**策略：
-- **境外实例（Overseas）**：TikTok / YouTube / Instagram / Kwai / 小红书海外版，USD 结算，英文客户端
-- **境内实例（Domestic）**：抖音 / 快手 / 小红书，CNY 结算，中文客户端
+- **境外实例（Overseas）**：TikTok / YouTube / Instagram / Kwai / 小红书海外版，USD 结算，客户端英文界面
+- **境内实例（Domestic）**：抖音 / 快手 / 小红书，CNY 结算，客户端中文界面
+- **管理后台（Admin）和销售端（Sales）无论境内外实例，统一使用中文界面**
 
 通过环境变量 `REGION=overseas|domestic` 区分实例行为，数据库完全独立。
 
@@ -189,11 +190,13 @@ public class ApiResponse<T>
 
 ## 双实例环境变量
 
+> **界面语言规则**：Admin 后台与 Sales 端无论哪个实例，**固定使用中文（zh-CN）**；仅 Client 客户端跟随 `CLIENT_LOCALE` 变量区分中英文。
+
 | 变量 | 境外值 | 境内值 |
 |------|--------|--------|
 | REGION | overseas | domestic |
 | DEFAULT_CURRENCY | USD | CNY |
-| CLIENT_LOCALE | en-US | zh-CN |
+| CLIENT_LOCALE | en-US（仅影响客户端） | zh-CN（仅影响客户端） |
 | ENABLED_PLATFORMS | YouTube,TikTok,Instagram,Kwai,Xiaohongshu,BrandDeal | Douyin,Kuaishou,Xiaohongshu,BrandDeal |
 | YOUTUBE_OAUTH_ENABLED | true | false |
 | DOMESTIC_API_URL | https://domestic-api.example.com | — |

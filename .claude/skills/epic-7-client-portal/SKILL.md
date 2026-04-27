@@ -1,9 +1,9 @@
 ---
 name: epic-7-client-portal
-description: 执行 Epic 7 —— 投资人客户端门户（Dashboard、项目收益、分红记录、钱包、合同下载）。依赖 Epic 3/5/6 已完成。
+description: 执行 Epic 7 —— 持股客户门户（Dashboard、项目收益、分红记录、钉包、合同下载）。依赖 Epic 3/5/6 已完成。
 ---
 
-# Epic 7 — 投资人客户端门户
+# Epic 7 — 持股客户门户
 
 ## 前置条件
 - Epic 3 (合同+账号初始化)、Epic 5 (分红)、Epic 6 (钱包) 已完成
@@ -19,12 +19,12 @@ description: 执行 Epic 7 —— 投资人客户端门户（Dashboard、项目�
 ```csharp
 public interface IClientDashboardService
 {
-    Task<ClientDashboardDto> GetDashboardAsync(Guid investorId);
+    Task<ClientDashboardDto> GetDashboardAsync(Guid clientUserId);
 }
 
 public record ClientDashboardDto
 {
-    public decimal TotalInvested { get; init; }
+    public decimal TotalSharePct { get; init; }
     public decimal TotalDividendReceived { get; init; }
     public decimal WalletBalance { get; init; }
     public string Currency { get; init; } = string.Empty;
@@ -36,8 +36,7 @@ public record ClientProjectSummaryDto
 {
     public string ProjectTitle { get; init; } = string.Empty;
     public string PlatformName { get; init; } = string.Empty;
-    public int SharePermille { get; init; }
-    public decimal InvestmentAmount { get; init; }
+    public decimal SharePct { get; init; }
     public decimal TotalDividend { get; init; }
     public string ContractStatus { get; init; } = string.Empty;
 }
@@ -46,14 +45,14 @@ public record ClientProjectSummaryDto
 **`IClientRevenueService`**
 ```csharp
 Task<PagedResult<ClientRevenueDto>> GetProjectRevenuesAsync(
-    Guid investorId, Guid projectId, PagedRequest paged);
-// 只返回 Approved 状态收益，只展示含该投资人 Slot 的项目
+    Guid clientUserId, Guid projectId, PagedRequest paged);
+// 只返回 Approved 状态收益，只展示含该客户 Slot 的项目
 ```
 
 **API Controller** (`ClientController.cs`)
 ```
 GET  /v1/client/dashboard
-GET  /v1/client/projects               投资人参与的项目列表
+GET  /v1/client/projects               客户参与的项目列表
 GET  /v1/client/projects/{id}/revenues 指定项目收益明细
 GET  /v1/client/dividends              全部分红记录（分页）
 GET  /v1/client/wallet                 钱包余额
@@ -64,7 +63,7 @@ GET  /v1/client/contracts/{id}/pdf     下载 PDF（通过存储签名 URL）
 ```
 
 **注意：数据隔离安全规则**
-- 所有查询必须附加 `WHERE InvestorUserId = currentUserId`
+- 所有查询必须附加 `WHERE ClientUserId = currentUserId`
 - Controller 中从 JWT Claims 提取 userId，通过 `ICurrentUserService` 注入
 
 **`ICurrentUserService`** (`src/Application/Common/Interfaces/ICurrentUserService.cs`)
@@ -99,7 +98,7 @@ public interface ICurrentUserService
 ```
 
 #### `layouts/ClientLayout.vue`
-- 侧栏导航：Dashboard / 我的投资 / 分红记录 / 钱包 / 合同
+- 侧栏导航：Dashboard / 我的持股 / 分红记录 / 鑉包 / 合同
 - 头部：用户名 + 语言切换 + 退出
 - 响应式（移动端折叠）
 
@@ -107,8 +106,8 @@ public interface ICurrentUserService
 
 **`ClientDashboardView.vue`**
 ```html
-<!-- 数据卡片行：投资总额 / 已收分红 / 钱包余额 -->
-<!-- 投资项目列表（ProjectSummaryCard 组件） -->
+<!-- 数据卡片行：持股比例 / 已收分红 / 鑉包余额 -->
+<!-- 参与项目列表（ProjectSummaryCard 组件） -->
 <!-- 最近分红记录（最近5条） -->
 ```
 
@@ -130,7 +129,7 @@ public interface ICurrentUserService
 
 ## 完成标准
 - [ ] Dashboard 3 个汇总卡片数据正确
-- [ ] 投资人只能看到自己的数据（数据隔离验证）
+- [ ] 客户只能看到自己的数据（数据隔离验证）
 - [ ] PDF 下载链接有效（30min 签名 URL）
 - [ ] 申请提现后钱包余额冻结
 - [ ] 路由守卫：非 Client 角色无法访问 /client/* 路由

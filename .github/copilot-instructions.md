@@ -4,8 +4,9 @@
 
 **ShareFlow** 短视频持股分红平台。**同一套代码库，双实例部署**：
 
-- 境外实例（Overseas）：TikTok / YouTube / Instagram，**USD** 结算，英文界面
-- 境内实例（Domestic）：抖音 / 快手 / 小红书，**CNY** 结算，中文界面
+- 境外实例（Overseas）：TikTok / YouTube / Instagram，**USD** 结算，客户端英文界面
+- 境内实例（Domestic）：抖音 / 快手 / 小红书，**CNY** 结算，客户端中文界面
+- **管理后台（Admin + Sales）无论境内外实例，统一使用中文界面**
 
 通过环境变量 `REGION=overseas|domestic` 区分实例，数据库完全独立。
 
@@ -31,7 +32,7 @@ back-end/src/
 - `SuperAdmin` — 超级管理员，拥有所有权限，绕过 Permission 校验
 - `BackendCustom` — 后台自定义角色，权限由 `BackendRole.Permissions[]` 动态配置
 - `Sales` — 销售员，管理线索、发起合同
-- `Client` — 投资人客户端，只读自己的数据
+- `Client` — 持股客户端，只读自己的数据
 - Partner — 国内合伙人（境内实例）
 
 权限常量在 `Domain/Constants/Permissions.cs`，Controller 方法标注 `[Permission("xxx.yyy")]`。
