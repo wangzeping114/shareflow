@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ShareFlow.Domain.Entities;
+using ShareFlow.Domain.Enums;
 using ShareFlow.Domain.Interfaces;
 
 namespace ShareFlow.Infrastructure.Persistence.Repositories;
@@ -56,6 +57,15 @@ public class UserRepository(AppDbContext dbContext) : IUserRepository
             .Where(x => x.Id == userId && x.BackendRoleId.HasValue)
             .SelectMany(x => x.BackendRole!.Permissions)
             .Distinct()
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<User>> GetByRoleAsync(UserRole role, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Users
+            .AsNoTracking()
+            .Where(x => x.Role == role && !x.IsDeleted)
+            .OrderBy(x => x.DisplayName)
             .ToListAsync(cancellationToken);
     }
 }

@@ -23,6 +23,8 @@ export interface ProjectSlot {
   sharePct: number
   status: SlotStatus
   clientUserId?: string
+  contractMonths: number
+  templateType: string
 }
 
 export interface ProjectDetail extends Project {

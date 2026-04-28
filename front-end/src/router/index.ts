@@ -40,6 +40,28 @@ const router = createRouter({
           name: 'admin-project-detail',
           component: () => import('../views/admin/projects/ProjectDetailView.vue'),
         },
+        {
+          path: 'contracts',
+          name: 'admin-contracts',
+          component: () => import('../views/admin/contracts/ContractListView.vue'),
+        },
+        {
+          path: 'contracts/:id',
+          name: 'admin-contract-detail',
+          component: () => import('../views/admin/contracts/ContractDetailView.vue'),
+        },
+      ],
+    },
+    {
+      path: '/esign/:token',
+      component: () => import('../layouts/PublicLayout.vue'),
+      meta: { requiresAuth: false },
+      children: [
+        {
+          path: '',
+          name: 'esign',
+          component: () => import('../views/esign/ESignView.vue'),
+        },
       ],
     },
     {

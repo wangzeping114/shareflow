@@ -91,4 +91,39 @@ public class ProjectService(
 
         return mapper.Map<SlotDto>(slot);
     }
-}
+
+    public async Task<SlotDto> UpdateSlotContractMonthsAsync(Guid projectId, Guid slotId, UpdateSlotContractMonthsRequest request, CancellationToken ct = default)
+    {
+        var slot = await slotRepository.GetByIdAsync(slotId, ct)
+            ?? throw new BusinessException("槽位不存在。", 404);
+
+        if (slot.ProjectId != projectId)
+            throw new BusinessException("槽位不属于该项目。", 400);
+
+        slot.SetContractMonths(request.ContractMonths);
+        await slotRepository.UpdateAsync(slot, ct);
+
+        return mapper.Map<SlotDto>(slot);
+    }
+
+    public async Task<IReadOnlyList<SlotDto>> BatchUpdateSlotsAsync(Guid projectId, BatchUpdateSlotsRequest request, CancellationToken ct = default)
+    {
+        if (request.SlotIds is not { Count: > 0 })
+            throw new BusinessException("请至少选择一个槽位。", 400);
+
+        var slots = await slotRepository.GetByIdsAsync(request.SlotIds, ct);
+        var projectSlots = slots.Where(s => s.ProjectId == projectId).ToList();
+
+        foreach (var slot in projectSlots)
+        {
+            if (request.ContractMonths.HasValue)
+                slot.SetContractMonths(request.ContractMonths.Value);
+            if (request.TemplateType is not null)
+                slot.SetTemplateType(request.TemplateType);
+            if (request.SharePct.HasValue)
+                slot.SetSharePermille(request.SharePct.Value);
+        }
+
+        await slotRepository.UpdateRangeAsync(projectSlots, ct);
+        return projectSlots.Select(mapper.Map<SlotDto>).ToList();
+    }}

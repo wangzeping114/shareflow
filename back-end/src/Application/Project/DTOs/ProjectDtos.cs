@@ -46,6 +46,24 @@ public record AddSlotRequest
     public decimal SharePct { get; init; }
 }
 
+public record UpdateSlotContractMonthsRequest
+{
+    /// <summary>合同期限（月），允许范围 1～120</summary>
+    public int ContractMonths { get; init; }
+}
+
+public record BatchUpdateSlotsRequest
+{
+    /// <summary>要批量修改的槽位 ID 列表</summary>
+    public IList<Guid> SlotIds { get; init; } = [];
+    /// <summary>合同期限（月），为 null 则不修改</summary>
+    public int? ContractMonths { get; init; }
+    /// <summary>模板类型，为 null 则不修改</summary>
+    public string? TemplateType { get; init; }
+    /// <summary>持股比例（百分比），为 null 则不修改</summary>
+    public decimal? SharePct { get; init; }
+}
+
 // ───────── Responses ─────────
 
 public record ProjectDto
@@ -77,4 +95,6 @@ public record SlotDto
     public decimal SharePct { get; init; }
     public string Status { get; init; } = string.Empty;
     public Guid? ClientUserId { get; init; }
+    public int ContractMonths { get; init; }
+    public string TemplateType { get; init; } = "OverseasEnglish";
 }

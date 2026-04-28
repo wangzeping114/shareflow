@@ -22,6 +22,7 @@ public class ProjectMappingConfig : IRegister
 
         config.NewConfig<ProjectSlot, SlotDto>()
             .Map(dest => dest.SharePct, src => src.SharePermille)
-            .Map(dest => dest.Status, src => src.Status.ToString());
+            .Map(dest => dest.Status, src => src.Status.ToString())
+            .Map(dest => dest.TemplateType, src => src.TemplateType);
     }
 }

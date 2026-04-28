@@ -46,4 +46,18 @@ export const projectApi = {
     return http.post<ApiResponse<ProjectSlot>>(`/v1/admin/projects/${projectId}/slots`, data)
       .then(r => r.data.data)
   },
+
+  updateSlotContractMonths(projectId: string, slotId: string, contractMonths: number) {
+    return http.patch<ApiResponse<ProjectSlot>>(
+      `/v1/admin/projects/${projectId}/slots/${slotId}/contract-months`,
+      { contractMonths }
+    ).then(r => r.data.data)
+  },
+
+  batchUpdateSlots(projectId: string, data: { slotIds: string[]; contractMonths?: number; templateType?: string }) {
+    return http.patch<ApiResponse<ProjectSlot[]>>(
+      `/v1/admin/projects/${projectId}/slots/batch`,
+      data
+    ).then(r => r.data.data)
+  },
 }

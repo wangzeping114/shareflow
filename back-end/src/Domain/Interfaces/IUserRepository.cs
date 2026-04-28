@@ -1,4 +1,5 @@
 using ShareFlow.Domain.Entities;
+using ShareFlow.Domain.Enums;
 
 namespace ShareFlow.Domain.Interfaces;
 
@@ -19,4 +20,7 @@ public interface IUserRepository
     Task UpdateAsync(User user, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<string>> GetPermissionsAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>获取指定角色的用户列表（用于合同投资人选择器）</summary>
+    Task<IReadOnlyList<User>> GetByRoleAsync(UserRole role, CancellationToken cancellationToken = default);
 }

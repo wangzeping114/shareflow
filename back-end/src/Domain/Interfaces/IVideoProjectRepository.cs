@@ -16,7 +16,9 @@ public interface IVideoProjectRepository
 public interface IProjectSlotRepository
 {
     Task<ProjectSlot?> GetByIdAsync(Guid slotId, CancellationToken ct = default);
+    Task<IReadOnlyList<ProjectSlot>> GetByIdsAsync(IEnumerable<Guid> slotIds, CancellationToken ct = default);
     Task<IReadOnlyList<ProjectSlot>> GetByProjectIdAsync(Guid projectId, CancellationToken ct = default);
     Task AddAsync(ProjectSlot slot, CancellationToken ct = default);
     Task UpdateAsync(ProjectSlot slot, CancellationToken ct = default);
+    Task UpdateRangeAsync(IEnumerable<ProjectSlot> slots, CancellationToken ct = default);
 }

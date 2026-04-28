@@ -450,4 +450,10 @@ internal sealed class FakeProjectSlotRepository : IProjectSlotRepository
 
     public Task UpdateAsync(ProjectSlot slot, CancellationToken ct = default)
         => Task.CompletedTask;
+
+    public Task<IReadOnlyList<ProjectSlot>> GetByIdsAsync(IEnumerable<Guid> slotIds, CancellationToken ct = default)
+        => Task.FromResult<IReadOnlyList<ProjectSlot>>(_slots.Where(s => slotIds.Contains(s.Id)).ToList());
+
+    public Task UpdateRangeAsync(IEnumerable<ProjectSlot> slots, CancellationToken ct = default)
+        => Task.CompletedTask;
 }

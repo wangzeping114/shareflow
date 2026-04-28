@@ -64,6 +64,98 @@ namespace ShareFlow.Migrator.Migrations
                     b.ToTable("backend_roles", (string)null);
                 });
 
+            modelBuilder.Entity("ShareFlow.Domain.Entities.Contract", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ContractSnapshot")
+                        .HasColumnType("text")
+                        .HasColumnName("contract_snapshot");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("InvestorUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("investor_user_id");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("PdfStoragePath")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("pdf_storage_path");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("project_id");
+
+                    b.Property<string>("SignToken")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("sign_token");
+
+                    b.Property<DateTime?>("SignTokenExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("sign_token_expires_at");
+
+                    b.Property<string>("SignatureDataUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("signature_data_url");
+
+                    b.Property<DateTime?>("SignedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("signed_at");
+
+                    b.Property<Guid>("SlotId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("slot_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("TemplateType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("template_type");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InvestorUserId")
+                        .HasDatabaseName("ix_contracts_investor_user_id");
+
+                    b.HasIndex("ProjectId")
+                        .HasDatabaseName("ix_contracts_project_id");
+
+                    b.HasIndex("SignToken")
+                        .IsUnique()
+                        .HasDatabaseName("ix_contracts_sign_token")
+                        .HasFilter("sign_token IS NOT NULL");
+
+                    b.HasIndex("SlotId");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("ix_contracts_status");
+
+                    b.ToTable("contracts", (string)null);
+                });
+
             modelBuilder.Entity("ShareFlow.Domain.Entities.ProjectSlot", b =>
                 {
                     b.Property<Guid>("Id")
@@ -74,6 +166,12 @@ namespace ShareFlow.Migrator.Migrations
                     b.Property<Guid?>("ClientUserId")
                         .HasColumnType("uuid")
                         .HasColumnName("client_user_id");
+
+                    b.Property<int>("ContractMonths")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(12)
+                        .HasColumnName("contract_months");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -103,6 +201,14 @@ namespace ShareFlow.Migrator.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
                         .HasColumnName("status");
+
+                    b.Property<string>("TemplateType")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasDefaultValue("OverseasEnglish")
+                        .HasColumnName("template_type");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -332,6 +438,33 @@ namespace ShareFlow.Migrator.Migrations
                         .HasDatabaseName("ix_video_projects_status");
 
                     b.ToTable("video_projects", (string)null);
+                });
+
+            modelBuilder.Entity("ShareFlow.Domain.Entities.Contract", b =>
+                {
+                    b.HasOne("ShareFlow.Domain.Entities.User", "InvestorUser")
+                        .WithMany()
+                        .HasForeignKey("InvestorUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ShareFlow.Domain.Entities.VideoProject", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ShareFlow.Domain.Entities.ProjectSlot", "Slot")
+                        .WithMany()
+                        .HasForeignKey("SlotId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("InvestorUser");
+
+                    b.Navigation("Project");
+
+                    b.Navigation("Slot");
                 });
 
             modelBuilder.Entity("ShareFlow.Domain.Entities.ProjectSlot", b =>

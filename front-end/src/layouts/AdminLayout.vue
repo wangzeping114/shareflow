@@ -14,6 +14,7 @@ import {
   NMessageProvider,
   NDialogProvider,
   NNotificationProvider,
+  NConfigProvider,
   type MenuOption,
 } from 'naive-ui'
 import { useAuthStore } from '../stores/auth'
@@ -36,6 +37,11 @@ const menuOptions: MenuOption[] = [
     icon: () => h('span', { style: 'font-size:16px' }, '🎬'),
   },
   {
+    label: () => h('span', '合同管理'),
+    key: 'admin-contracts',
+    icon: () => h('span', { style: 'font-size:16px' }, '📄'),
+  },
+  {
     label: () => h('span', '角色权限'),
     key: 'admin-roles',
     icon: () => h('span', { style: 'font-size:16px' }, '🔐'),
@@ -46,6 +52,7 @@ function handleMenuSelect(key: string) {
   const routeMap: Record<string, string> = {
     'admin-home': '/admin',
     'admin-projects': '/admin/projects',
+    'admin-contracts': '/admin/contracts',
     'admin-roles': '/admin/roles',
   }
   const target = routeMap[key]
@@ -59,6 +66,7 @@ async function handleLogout() {
 </script>
 
 <template>
+  <n-config-provider>
   <n-message-provider>
     <n-notification-provider>
       <n-dialog-provider>
@@ -104,6 +112,7 @@ async function handleLogout() {
       </n-dialog-provider>
     </n-notification-provider>
   </n-message-provider>
+  </n-config-provider>
 </template>
 
 <style scoped>
