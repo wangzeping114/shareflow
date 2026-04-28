@@ -4,6 +4,7 @@ public static class Permissions
 {
     public const string ProjectWrite = "project.write";
     public const string ProjectRead = "project.read";
+    public const string RevenueRead = "revenue.read";
     public const string RevenueWrite = "revenue.write";
     public const string RevenueVerify = "revenue.verify";
     public const string DividendWrite = "dividend.write";

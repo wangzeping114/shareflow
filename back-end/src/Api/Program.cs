@@ -58,6 +58,7 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddHttpClient(); // For ClaudeAiRevenueAgent
 
 // JWT
 var jwtKey = builder.Configuration["Jwt:SecretKey"]!;

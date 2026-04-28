@@ -54,7 +54,7 @@ export const projectApi = {
     ).then(r => r.data.data)
   },
 
-  batchUpdateSlots(projectId: string, data: { slotIds: string[]; contractMonths?: number; templateType?: string }) {
+  batchUpdateSlots(projectId: string, data: { slotIds: string[]; contractMonths?: number; templateType?: string; sharePct?: number }) {
     return http.patch<ApiResponse<ProjectSlot[]>>(
       `/v1/admin/projects/${projectId}/slots/batch`,
       data

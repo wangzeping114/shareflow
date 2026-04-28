@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<VideoProject> VideoProjects => Set<VideoProject>();
     public DbSet<ProjectSlot> ProjectSlots => Set<ProjectSlot>();
     public DbSet<Contract> Contracts => Set<Contract>();
+    public DbSet<PlatformRevenue> PlatformRevenues => Set<PlatformRevenue>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

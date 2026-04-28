@@ -28,7 +28,7 @@ import type { ProjectDetail, ProjectSlot, ProjectStatus, SlotStatus } from '../.
 const route = useRoute()
 const router = useRouter()
 const message = useMessage()
-const { currency, region } = useRegion()
+const { currency } = useRegion()
 
 const projectId = route.params.id as string
 const loading = ref(true)
@@ -151,12 +151,12 @@ const slotColumns: DataTableColumns<ProjectSlot> = [
 
 // ── 批量操作 ──────────────────────────────
 const batchTemplateType = ref<string>('')
-const batchDurationMonths = ref<number | null>(null)
+const batchDurationMonths = ref<number | undefined>(undefined)
 const batchSharePct = ref<number | null>(null)
 const batchApplying = ref(false)
 
-const batchDurationOptions = [
-  { label: '不修改', value: null },
+const batchDurationOptions: { label: string; value: number | undefined }[] = [
+  { label: '不修改', value: undefined },
   { label: '6 个月', value: 6 },
   { label: '1 年', value: 12 },
   { label: '2 年', value: 24 },
@@ -171,7 +171,7 @@ const batchTemplateOptions = [
 
 async function batchApply() {
   if (!checkedRowKeys.value.length) return
-  if (!batchTemplateType.value && batchDurationMonths.value === null && batchSharePct.value === null) {
+  if (!batchTemplateType.value && batchDurationMonths.value === undefined && batchSharePct.value === null) {
     message.warning('请至少选择要修改的项目')
     return
   }
@@ -180,7 +180,7 @@ async function batchApply() {
     const payload: { slotIds: string[]; contractMonths?: number; templateType?: string; sharePct?: number } = {
       slotIds: checkedRowKeys.value,
     }
-    if (batchDurationMonths.value !== null) payload.contractMonths = batchDurationMonths.value
+    if (batchDurationMonths.value !== undefined) payload.contractMonths = batchDurationMonths.value
     if (batchTemplateType.value) payload.templateType = batchTemplateType.value
     if (batchSharePct.value !== null && batchSharePct.value > 0) payload.sharePct = batchSharePct.value
     await projectApi.batchUpdateSlots(projectId, payload)
@@ -509,7 +509,7 @@ async function handleAddSlot() {
       style="width: 360px"
     >
       <n-text depth="3" style="display: block; margin-bottom: 12px">
-        槽位 #{{ project?.slots.findIndex(s => s.id === editSharePctSlot?.id) + 1 }}
+        槽位 #{{ (project?.slots?.findIndex(s => s.id === editSharePctSlot?.id) ?? -1) + 1 }}
         &nbsp;当前：{{ editSharePctSlot?.sharePct }}%
       </n-text>
       <n-form label-placement="top">
@@ -539,7 +539,7 @@ async function handleAddSlot() {
         <template #header>
           <span>合同模板预览</span>
           <n-text depth="3" style="font-size: 13px; margin-left: 8px">
-            — 槽位 #{{ project?.slots.findIndex(s => s.id === previewSlot?.id) + 1 }}
+            — 槽位 #{{ (project?.slots?.findIndex(s => s.id === previewSlot?.id) ?? -1) + 1 }}
             &nbsp;|&nbsp;{{ previewSlot?.sharePct }}%
             &nbsp;|&nbsp;{{ currency }}
           </n-text>
