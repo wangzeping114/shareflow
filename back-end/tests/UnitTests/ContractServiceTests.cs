@@ -222,7 +222,7 @@ public class ContractServiceTests
             => Task.FromResult(Contracts.FirstOrDefault(c => c.SignToken == token));
 
         public Task<(IReadOnlyList<Contract> Items, int Total)> GetPagedAsync(
-            Guid? projectId, ContractStatus? status, int page, int pageSize, CancellationToken ct = default)
+            Guid? projectId, ContractStatus? status, string? projectTitle, int page, int pageSize, CancellationToken ct = default)
         {
             IReadOnlyList<Contract> items = Contracts;
             return Task.FromResult((items, items.Count));
