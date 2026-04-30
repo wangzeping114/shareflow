@@ -47,6 +47,11 @@ const menuOptions: MenuOption[] = [
     icon: () => h('span', { style: 'font-size:16px' }, '💰'),
   },
   {
+    label: () => h('span', '分红管理'),
+    key: 'admin-dividends',
+    icon: () => h('span', { style: 'font-size:16px' }, '🎯'),
+  },
+  {
     label: () => h('span', '角色权限'),
     key: 'admin-roles',
     icon: () => h('span', { style: 'font-size:16px' }, '🔐'),
@@ -59,6 +64,7 @@ function handleMenuSelect(key: string) {
     'admin-projects': '/admin/projects',
     'admin-contracts': '/admin/contracts',
     'admin-revenues': '/admin/revenues',
+    'admin-dividends': '/admin/dividends',
     'admin-roles': '/admin/roles',
   }
   const target = routeMap[key]

@@ -55,6 +55,14 @@ public class ContractRepository(AppDbContext db) : IContractRepository
         return (items, total);
     }
 
+    public async Task<IReadOnlyList<Contract>> GetSignedAsync(CancellationToken ct = default)
+    {
+        return await db.Contracts
+            .AsNoTracking()
+            .Where(c => c.Status == ContractStatus.Signed || c.Status == ContractStatus.Executed)
+            .ToListAsync(ct);
+    }
+
     public async Task AddAsync(Contract contract, CancellationToken ct = default)
     {
         await db.Contracts.AddAsync(contract, ct);

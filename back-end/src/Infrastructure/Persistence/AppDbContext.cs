@@ -14,6 +14,7 @@ public class AppDbContext : DbContext
     public DbSet<ProjectSlot> ProjectSlots => Set<ProjectSlot>();
     public DbSet<Contract> Contracts => Set<Contract>();
     public DbSet<PlatformRevenue> PlatformRevenues => Set<PlatformRevenue>();
+    public DbSet<DividendRecord> DividendRecords => Set<DividendRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

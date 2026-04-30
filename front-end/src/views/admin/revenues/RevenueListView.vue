@@ -6,6 +6,7 @@ import {
   type DataTableColumns, type DataTableRowKey,
 } from 'naive-ui'
 import { getRevenueList, approveRevenue, rejectRevenue, addManualRevenue } from '../../../api/admin/revenue'
+import { recalculateDividends, repairSlots } from '../../../api/admin/dividend'
 import { usePagedList } from '../../../composables/use-paged-list'
 import type { RevenueDto, RevenueStatus } from '../../../types/revenue'
 import CsvImporterDrawer from './CsvImporterDrawer.vue'
@@ -26,6 +27,8 @@ const showAiUploader = ref(false)
 // 批量操作
 const checkedRowKeys = ref<DataTableRowKey[]>([])
 const batchLoading = ref(false)
+const approvingIds = ref(new Set<string>())
+const recalculatingIds = ref(new Set<string>())
 
 // 手工录入 — 项目下拉
 const { projectOptions, projectsLoading } = useProjectSelect()
@@ -126,6 +129,8 @@ const columns: DataTableColumns<RevenueDto> = [
         row.status === 'Pending' || row.status === 'NeedsVerification'
           ? h(NButton, {
               size: 'small', type: 'primary',
+              loading: approvingIds.value.has(row.id),
+              disabled: approvingIds.value.has(row.id),
               onClick: () => handleApprove(row.id),
             }, () => '通过')
           : null,
@@ -135,17 +140,47 @@ const columns: DataTableColumns<RevenueDto> = [
               onClick: () => openReject(row.id),
             }, () => '拒绝')
           : null,
+        row.status === 'Approved'
+          ? h(NButton, {
+              size: 'small', type: 'default',
+              loading: recalculatingIds.value.has(row.id),
+              disabled: recalculatingIds.value.has(row.id),
+              onClick: () => handleRecalculate(row.id),
+            }, () => '补算分红')
+          : null,
       ]),
   },
 ]
 
 async function handleApprove(id: string) {
+  if (approvingIds.value.has(id)) return
+  approvingIds.value.add(id)
   try {
     await approveRevenue(id)
     message.success('已通过审核')
     reload()
-  } catch {
-    message.error('操作失败')
+  } catch (e: any) {
+    message.error(e?.response?.data?.message ?? '操作失败')
+  } finally {
+    approvingIds.value.delete(id)
+  }
+}
+
+async function handleRecalculate(id: string) {
+  if (recalculatingIds.value.has(id)) return
+  recalculatingIds.value.add(id)
+  try {
+    // 先修复可能未正确 Occupied 的存量槽位，再补算分红
+    const repairResult = await repairSlots()
+    await recalculateDividends(id)
+    const repairHint = repairResult && repairResult.repairedCount > 0
+      ? `（已修复 ${repairResult.repairedCount} 个槽位状态）`
+      : ''
+    message.success(`分红补算已完成${repairHint}，请到分红管理查看结果`)
+  } catch (e: any) {
+    message.error(e?.response?.data?.message ?? '补算失败')
+  } finally {
+    recalculatingIds.value.delete(id)
   }
 }
 

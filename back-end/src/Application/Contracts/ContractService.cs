@@ -4,6 +4,7 @@ using ShareFlow.Application.Contracts.DTOs;
 using ShareFlow.Application.Contracts.Interfaces;
 using ShareFlow.Domain.Common;
 using ShareFlow.Domain.Entities;
+using ShareFlow.Domain.Enums;
 using ShareFlow.Domain.Interfaces;
 
 // ReSharper disable once RedundantUsingDirective (RegionMode enum lives here)
@@ -14,6 +15,7 @@ public class ContractService(
     IContractRepository contractRepository,
     IVideoProjectRepository projectRepository,
     IUserRepository userRepository,
+    IProjectSlotRepository slotRepository,
     IRegionContext regionContext,
     IContractTemplateService templateService,
     IMapper mapper) : IContractService
@@ -72,6 +74,14 @@ public class ContractService(
             snapshot);
 
         await contractRepository.AddAsync(contract, ct);
+
+        // 槽位预留给投资人，防止重复签约
+        if (slot.Status == SlotStatus.Available)
+        {
+            slot.Reserve(request.InvestorUserId);
+            await slotRepository.UpdateAsync(slot, ct);
+        }
+
         return contract.Id;
     }
 

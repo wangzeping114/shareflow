@@ -55,6 +55,11 @@ const router = createRouter({
           name: 'admin-revenues',
           component: () => import('../views/admin/revenues/RevenueListView.vue'),
         },
+        {
+          path: 'dividends',
+          name: 'admin-dividends',
+          component: () => import('../views/admin/dividends/DividendListView.vue'),
+        },
       ],
     },
     {
