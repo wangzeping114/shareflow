@@ -52,6 +52,16 @@ const menuOptions: MenuOption[] = [
     icon: () => h('span', { style: 'font-size:16px' }, '🎯'),
   },
   {
+    label: () => h('span', '钱包管理'),
+    key: 'admin-wallets',
+    icon: () => h('span', { style: 'font-size:16px' }, '👛'),
+  },
+  {
+    label: () => h('span', '提现审批'),
+    key: 'admin-withdrawals',
+    icon: () => h('span', { style: 'font-size:16px' }, '💸'),
+  },
+  {
     label: () => h('span', '角色权限'),
     key: 'admin-roles',
     icon: () => h('span', { style: 'font-size:16px' }, '🔐'),
@@ -65,6 +75,8 @@ function handleMenuSelect(key: string) {
     'admin-contracts': '/admin/contracts',
     'admin-revenues': '/admin/revenues',
     'admin-dividends': '/admin/dividends',
+    'admin-wallets': '/admin/wallets',
+    'admin-withdrawals': '/admin/withdrawals',
     'admin-roles': '/admin/roles',
   }
   const target = routeMap[key]
@@ -82,7 +94,7 @@ async function handleLogout() {
   <n-message-provider>
     <n-notification-provider>
       <n-dialog-provider>
-  <n-layout has-sider style="min-height: 100vh; background: #f5f7fb">
+  <n-layout has-sider style="min-height: 100vh; background: #ffffff">
     <!-- 侧边栏 -->
     <n-layout-sider
       bordered
@@ -90,7 +102,7 @@ async function handleLogout() {
       :collapsed-width="64"
       :width="220"
       show-trigger
-      style="background: #fff"
+      style="background: #fff; min-height: 100vh"
     >
       <div class="brand">
         <n-text strong style="color: #3b82f6; font-size: 18px">ShareFlow</n-text>

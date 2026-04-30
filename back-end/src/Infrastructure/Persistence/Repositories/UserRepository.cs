@@ -68,4 +68,21 @@ public class UserRepository(AppDbContext dbContext) : IUserRepository
             .OrderBy(x => x.DisplayName)
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<Guid>> SearchIdsByKeywordAsync(string keyword, CancellationToken cancellationToken = default)
+    {
+        var kw = keyword.Trim().ToLower();
+        return await dbContext.Users.AsNoTracking()
+            .Where(u => u.DisplayName.ToLower().Contains(kw) || u.Email.ToLower().Contains(kw))
+            .Select(u => u.Id)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<User>> GetByIdsAsync(IReadOnlyList<Guid> ids, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Users
+            .AsNoTracking()
+            .Where(x => ids.Contains(x.Id))
+            .ToListAsync(cancellationToken);
+    }
 }

@@ -15,6 +15,9 @@ public class AppDbContext : DbContext
     public DbSet<Contract> Contracts => Set<Contract>();
     public DbSet<PlatformRevenue> PlatformRevenues => Set<PlatformRevenue>();
     public DbSet<DividendRecord> DividendRecords => Set<DividendRecord>();
+    public DbSet<Wallet> Wallets => Set<Wallet>();
+    public DbSet<WalletTransaction> WalletTransactions => Set<WalletTransaction>();
+    public DbSet<WithdrawalRequest> WithdrawalRequests => Set<WithdrawalRequest>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

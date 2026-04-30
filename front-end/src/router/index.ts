@@ -60,6 +60,16 @@ const router = createRouter({
           name: 'admin-dividends',
           component: () => import('../views/admin/dividends/DividendListView.vue'),
         },
+        {
+          path: 'wallets',
+          name: 'admin-wallets',
+          component: () => import('../views/admin/wallet/WalletListView.vue'),
+        },
+        {
+          path: 'withdrawals',
+          name: 'admin-withdrawals',
+          component: () => import('../views/admin/wallet/WithdrawalRequestListView.vue'),
+        },
       ],
     },
     {
@@ -95,6 +105,11 @@ const router = createRouter({
           path: '',
           name: 'client-home',
           component: () => import('../views/client/ClientHomeView.vue'),
+        },
+        {
+          path: 'wallet',
+          name: 'client-wallet',
+          component: () => import('../views/client/wallet/WalletView.vue'),
         },
       ],
     },

@@ -23,4 +23,10 @@ public interface IUserRepository
 
     /// <summary>获取指定角色的用户列表（用于合同投资人选择器）</summary>
     Task<IReadOnlyList<User>> GetByRoleAsync(UserRole role, CancellationToken cancellationToken = default);
+
+    /// <summary>批量获取用户（用于 DTO 关联展示）</summary>
+    Task<IReadOnlyList<User>> GetByIdsAsync(IReadOnlyList<Guid> ids, CancellationToken cancellationToken = default);
+
+    /// <summary>按姓名或邮箱关键字搜索（用于钱包/提现管理过滤）</summary>
+    Task<IReadOnlyList<Guid>> SearchIdsByKeywordAsync(string keyword, CancellationToken cancellationToken = default);
 }
