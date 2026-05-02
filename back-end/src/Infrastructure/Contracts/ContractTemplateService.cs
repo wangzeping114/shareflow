@@ -42,8 +42,8 @@ public class ContractTemplateService : IContractTemplateService
         commercial law, as agreed between the parties.
 
         ──────────────────────────────────────────────
-        Investor Signature: ___________________________
-        Date Signed       : ___________________________
+        Shareholder Signature: {SignatureNote}
+        Date Signed          : {SignedDate}
         ──────────────────────────────────────────────
         """;
 
@@ -80,8 +80,8 @@ public class ContractTemplateService : IContractTemplateService
         本协议适用中华人民共和国相关法律法规进行解释和执行。
 
         ──────────────────────────────────────────────
-        投资人签名：___________________________
-        签署日期  ：___________________________
+        持股人签名：{SignatureNote}
+        签署日期  ：{SignedDate}
         ──────────────────────────────────────────────
         """;
 
@@ -101,7 +101,17 @@ public class ContractTemplateService : IContractTemplateService
             .Replace("{SharePermille}", data.SharePermille.ToString("F4"))
             .Replace("{Currency}", data.Currency)
             .Replace("{TotalInvestment}", data.TotalInvestment.ToString("N2"))
-            .Replace("{EffectiveDate}", data.EffectiveDate);
+            .Replace("{EffectiveDate}", data.EffectiveDate)
+            .Replace("{SignatureNote}", "[PENDING_SIG]")
+            .Replace("{SignedDate}", "[PENDING_DATE]");
+    }
+
+    /// <summary>将签名日期写入已渲染的快照文本（签约后调用）</summary>
+    public static string EmbedSignature(string snapshot, string signedDate)
+    {
+        return snapshot
+            .Replace("[PENDING_SIG]", "[电子签名已采集]")
+            .Replace("[PENDING_DATE]", signedDate);
     }
 
     public string GetRaw(string templateType)

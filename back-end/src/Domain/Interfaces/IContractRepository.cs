@@ -12,6 +12,8 @@ public interface IContractRepository
         Guid? projectId, ContractStatus? status, string? projectTitle, int page, int pageSize, CancellationToken ct = default);
     /// <summary>返回所有已签署或已执行的合同（用于槽位补修复）</summary>
     Task<IReadOnlyList<Contract>> GetSignedAsync(CancellationToken ct = default);
+    /// <summary>返回指定客户的合同列表</summary>
+    Task<IReadOnlyList<Contract>> GetByClientIdAsync(Guid clientUserId, CancellationToken ct = default);
     Task AddAsync(Contract contract, CancellationToken ct = default);
     Task UpdateAsync(Contract contract, CancellationToken ct = default);
 }

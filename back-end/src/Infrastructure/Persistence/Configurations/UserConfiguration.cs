@@ -21,6 +21,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.Role).HasColumnName("role").HasConversion<string>().HasMaxLength(32).IsRequired();
         builder.Property(x => x.Status).HasColumnName("status").HasConversion<string>().HasMaxLength(32).IsRequired();
         builder.Property(x => x.BackendRoleId).HasColumnName("backend_role_id");
+        builder.Property(x => x.InitialPassword).HasColumnName("initial_password").HasMaxLength(64);
         builder.Property(x => x.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);
         builder.Property(x => x.DeletedAt).HasColumnName("deleted_at");
         builder.Property(x => x.CreatedAt).HasColumnName("created_at");

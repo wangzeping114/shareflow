@@ -9,11 +9,30 @@
     </template>
 
     <template v-else-if="signSuccess">
-      <n-result
-        status="success"
-        :title="$t('contract.signSuccess')"
-        :description="$t('contract.signSuccessDesc')"
-      />
+      <div class="esign-card">
+        <n-result
+          status="success"
+          :title="$t('contract.signSuccess')"
+          :description="$t('contract.signSuccessDesc')"
+        />
+        <template v-if="signResult?.clientUsername && signResult?.initialPassword">
+          <n-alert type="warning" title="请保存您的登录账号，此密码仅显示一次" style="margin-top: 16px">
+            您的持股客户小程序登录账号已创建，请立即记录下方信息并修改密码。
+          </n-alert>
+          <n-card style="margin-top: 12px">
+            <n-flex vertical :size="10">
+              <n-flex align="center">
+                <n-text style="width: 72px; color: #666">用户名</n-text>
+                <n-input :value="signResult.clientUsername" readonly style="flex: 1; font-family: monospace" />
+              </n-flex>
+              <n-flex align="center">
+                <n-text style="width: 72px; color: #666">初始密码</n-text>
+                <n-input :value="signResult.initialPassword" readonly style="flex: 1; font-family: monospace" />
+              </n-flex>
+            </n-flex>
+          </n-card>
+        </template>
+      </div>
     </template>
 
     <template v-else-if="preview">
@@ -60,11 +79,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { useMessage, NSpin, NResult, NCard, NDescriptions, NDescriptionsItem, NDivider, NSpace, NButton } from 'naive-ui'
+import { useMessage, NSpin, NResult, NCard, NDescriptions, NDescriptionsItem, NDivider, NSpace, NButton, NAlert, NFlex, NText, NInput } from 'naive-ui'
 import { useI18n } from 'vue-i18n'
 import SignaturePad from '../../components/business/SignaturePad.vue'
 import { getESignPreview, submitSignature } from '../../api/public/esign'
 import type { ContractPreviewDto } from '../../types/contract'
+import type { SignContractResult } from '../../types/contract'
 
 const route = useRoute()
 const message = useMessage()
@@ -74,6 +94,7 @@ const loading = ref(true)
 const error = ref(false)
 const submitting = ref(false)
 const signSuccess = ref(false)
+const signResult = ref<SignContractResult | null>(null)
 const preview = ref<ContractPreviewDto | null>(null)
 const signatureDataUrl = ref('')
 
@@ -93,7 +114,8 @@ async function handleSubmit() {
   submitting.value = true
   try {
     const token = route.params.token as string
-    await submitSignature(token, signatureDataUrl.value)
+    const result = await submitSignature(token, signatureDataUrl.value)
+    signResult.value = result
     signSuccess.value = true
   } catch (e: any) {
     message.error(e?.response?.data?.message ?? t('esign.invalidToken'))

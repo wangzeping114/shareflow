@@ -28,6 +28,9 @@ public class User : Entity<Guid>
 
     public BackendRole? BackendRole { get; private set; }
 
+    /// <summary>首次登录临时密码（明文，仅在客户签约时展示一次，登录后应置空）</summary>
+    public string? InitialPassword { get; private set; }
+
     public IReadOnlyCollection<RefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();
 
     public static User Create(string username, string email, string password, string displayName, UserRole role)
@@ -42,6 +45,32 @@ public class User : Entity<Guid>
             Status = UserStatus.Active,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(password)
         };
+    }
+
+    /// <summary>为 Lead 创建 Client 用户（签约端用户），通过 out 参数返回明文临时密码</summary>
+    public static User CreateClient(string username, string email, string displayName, out string tempPassword)
+    {
+        tempPassword = Guid.NewGuid().ToString("N").Substring(0, 12);
+        return new User
+        {
+            Id = Guid.NewGuid(),
+            Username = username.Trim().ToLowerInvariant(),
+            Email = email.Trim().ToLowerInvariant(),
+            DisplayName = displayName.Trim(),
+            Role = UserRole.Client,
+            Status = UserStatus.Active,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(tempPassword),
+            InitialPassword = tempPassword
+        };
+    }
+
+    /// <summary>客户签约完成后读取并清除初始密码</summary>
+    public string? TakeInitialPassword()
+    {
+        var pwd = InitialPassword;
+        InitialPassword = null;
+        SetUpdatedAt();
+        return pwd;
     }
 
     public bool VerifyPassword(string password)

@@ -62,8 +62,7 @@ public record GenerateSignLinkResult
     public DateTime ExpiresAt { get; init; }
 }
 
-/// <summary>
-/// 公开签约页预览数据（无需登录即可获取，通过 Token 验证）
+/// <summary>公开签约页预览数据（无需登录即可获取，通过 Token 验证）
 /// </summary>
 public record ContractPreviewDto
 {
@@ -74,4 +73,13 @@ public record ContractPreviewDto
     public string TemplateType { get; init; } = string.Empty;
     public string? ContractSnapshot { get; init; }
     public DateTime ExpiresAt { get; init; }
+}
+
+/// <summary>签约完成后返回结果（包含初始账号信息）</summary>
+public record SignContractResult
+{
+    /// <summary>初始用户名，仅首次判断时非 null</summary>
+    public string? ClientUsername { get; init; }
+    /// <summary>初始密码明文，仅首次判断时非 null，展示后即废弃</summary>
+    public string? InitialPassword { get; init; }
 }

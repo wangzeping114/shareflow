@@ -5,8 +5,8 @@ import {
   NButton, NModal, NForm, NFormItem, NInputNumber, NInput, NTag,
   NPagination, useMessage,
 } from 'naive-ui'
-import { getMyWallet, getMyTransactions, requestWithdrawal, getMyWithdrawals } from '../../api/public/wallet'
-import type { WalletDto, WalletTransactionDto, WithdrawalRequestDto, WithdrawalStatus } from '../../types/wallet'
+import { getMyWallet, getMyTransactions, requestWithdrawal, getMyWithdrawals } from '../../../api/public/wallet'
+import type { WalletDto, WalletTransactionDto, WithdrawalRequestDto, WithdrawalStatus } from '../../../types/wallet'
 
 const message = useMessage()
 

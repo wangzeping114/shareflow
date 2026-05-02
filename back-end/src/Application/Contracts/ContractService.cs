@@ -1,4 +1,5 @@
 using MapsterMapper;
+using Microsoft.Extensions.Configuration;
 using ShareFlow.Application.Common;
 using ShareFlow.Application.Contracts.DTOs;
 using ShareFlow.Application.Contracts.Interfaces;
@@ -18,7 +19,8 @@ public class ContractService(
     IProjectSlotRepository slotRepository,
     IRegionContext regionContext,
     IContractTemplateService templateService,
-    IMapper mapper) : IContractService
+    IMapper mapper,
+    IConfiguration configuration) : IContractService
 {
     public async Task<PagedResult<ContractDto>> GetListAsync(ContractQueryRequest query, CancellationToken ct = default)
     {
@@ -49,10 +51,8 @@ public class ContractService(
         var investor = await userRepository.GetByIdAsync(request.InvestorUserId, ct)
             ?? throw new BusinessException("投资人用户不存在。", 404);
 
-        // 根据 region 决定模板类型（overseas 默认英文）
-        var templateType = regionContext.Mode == RegionMode.Overseas
-            ? "OverseasEnglish"
-            : "DomesticChinese";
+        // 使用槽位自身配置的模板类型（由管理员在创建槽位时设定）
+        var templateType = slot.TemplateType;
 
         // 渲染标准化合同正文作为快照
         var templateData = new ContractTemplateData(
@@ -94,7 +94,8 @@ public class ContractService(
         await contractRepository.UpdateAsync(contract, ct);
 
         // 签约 URL 前端路由：/esign/{token}
-        var signUrl = $"/esign/{token}";
+        var baseUrl = configuration["FrontendBaseUrl"]?.TrimEnd('/') ?? "";
+        var signUrl = $"{baseUrl}/esign/{token}";
 
         return new GenerateSignLinkResult
         {

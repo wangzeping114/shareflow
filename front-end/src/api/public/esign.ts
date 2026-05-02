@@ -1,6 +1,6 @@
 import axios from 'axios'
 import type { ApiResponse } from '../../types/auth'
-import type { ContractPreviewDto, SubmitSignatureRequest } from '../../types/contract'
+import type { ContractPreviewDto, SubmitSignatureRequest, SignContractResult } from '../../types/contract'
 
 // 公开接口不携带认证 token
 const publicHttp = axios.create({
@@ -16,7 +16,7 @@ export function getESignPreview(token: string) {
 
 export function submitSignature(token: string, signatureDataUrl: string) {
   return publicHttp
-    .post<ApiResponse<{ message: string }>>(`/v1/public/esign/${token}`, {
+    .post<ApiResponse<SignContractResult>>(`/v1/public/esign/${token}`, {
       signatureDataUrl,
     } satisfies SubmitSignatureRequest)
     .then((r) => r.data.data)

@@ -84,6 +84,21 @@ services:
       - shareflow-api-domestic
     restart: always
 
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: shareflow
+      MINIO_ROOT_PASSWORD: shareflow123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+    networks:
+      - shareflow-net
+    restart: always
+
 networks:
   shareflow-net:
     driver: bridge
@@ -91,3 +106,4 @@ networks:
 volumes:
   pgdata-overseas:
   pgdata-domestic:
+  minio-data:

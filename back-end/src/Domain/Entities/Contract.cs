@@ -90,6 +90,13 @@ public class Contract : Entity<Guid>
         SetUpdatedAt();
     }
 
+    /// <summary>签约完成后嵌入签名日期到快照</summary>
+    public void UpdateSnapshot(string newSnapshot)
+    {
+        ContractSnapshot = newSnapshot;
+        SetUpdatedAt();
+    }
+
     /// <summary>标记为已过期。</summary>
     public void MarkExpired()
     {

@@ -243,6 +243,81 @@ namespace ShareFlow.Migrator.Migrations
                     b.ToTable("dividend_records", (string)null);
                 });
 
+            modelBuilder.Entity("ShareFlow.Domain.Entities.Lead", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ClientInitialPassword")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("client_initial_password");
+
+                    b.Property<Guid?>("ClientUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("client_user_id");
+
+                    b.Property<string>("ContactInfo")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("contact_info");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("email");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text")
+                        .HasColumnName("notes");
+
+                    b.Property<Guid>("SalesOwnerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("sales_owner_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClientUserId")
+                        .HasDatabaseName("ix_leads_client_user_id");
+
+                    b.HasIndex("SalesOwnerId")
+                        .HasDatabaseName("ix_leads_sales_owner_id");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("ix_leads_status");
+
+                    b.ToTable("leads", (string)null);
+                });
+
             modelBuilder.Entity("ShareFlow.Domain.Entities.PlatformRevenue", b =>
                 {
                     b.Property<Guid>("Id")
@@ -499,6 +574,11 @@ namespace ShareFlow.Migrator.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)")
                         .HasColumnName("email");
+
+                    b.Property<string>("InitialPassword")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("initial_password");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
@@ -891,6 +971,23 @@ namespace ShareFlow.Migrator.Migrations
                     b.Navigation("Project");
 
                     b.Navigation("Slot");
+                });
+
+            modelBuilder.Entity("ShareFlow.Domain.Entities.Lead", b =>
+                {
+                    b.HasOne("ShareFlow.Domain.Entities.User", "ClientUser")
+                        .WithMany()
+                        .HasForeignKey("ClientUserId");
+
+                    b.HasOne("ShareFlow.Domain.Entities.User", "SalesOwner")
+                        .WithMany()
+                        .HasForeignKey("SalesOwnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ClientUser");
+
+                    b.Navigation("SalesOwner");
                 });
 
             modelBuilder.Entity("ShareFlow.Domain.Entities.PlatformRevenue", b =>

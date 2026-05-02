@@ -63,6 +63,17 @@ public class ContractRepository(AppDbContext db) : IContractRepository
             .ToListAsync(ct);
     }
 
+    public async Task<IReadOnlyList<Contract>> GetByClientIdAsync(Guid clientUserId, CancellationToken ct = default)
+    {
+        return await db.Contracts
+            .Include(c => c.Project)
+            .Include(c => c.Slot)
+            .AsNoTracking()
+            .Where(c => c.InvestorUserId == clientUserId)
+            .OrderByDescending(c => c.CreatedAt)
+            .ToListAsync(ct);
+    }
+
     public async Task AddAsync(Contract contract, CancellationToken ct = default)
     {
         await db.Contracts.AddAsync(contract, ct);

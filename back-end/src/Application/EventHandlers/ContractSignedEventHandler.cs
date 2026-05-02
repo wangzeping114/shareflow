@@ -1,5 +1,6 @@
 using MediatR;
 using ShareFlow.Application.Auth.Interfaces;
+using ShareFlow.Application.Common.Interfaces;
 using ShareFlow.Application.Contracts.Interfaces;
 using ShareFlow.Domain.Common;
 using ShareFlow.Domain.Enums;
@@ -11,13 +12,13 @@ namespace ShareFlow.Application.EventHandlers;
 /// <summary>
 /// 合同签署后触发：
 /// 1. 将 ProjectSlot 状态流转为 Occupied，绑定 InvestorUserId
-/// 2. 生成合同 PDF，更新 PdfStoragePath → 状态流转到 Executed
-/// （Epic 11 可扩展：推站内通知）
+/// 2. 用 QuestPDF 生成合同 PDF → 上传 MinIO → 更新 PdfStoragePath → 状态流转到 Executed
 /// </summary>
 public class ContractSignedEventHandler(
     IContractRepository contractRepository,
     IProjectSlotRepository slotRepository,
-    IPdfGeneratorService pdfGenerator) : INotificationHandler<ContractSignedEvent>
+    IPdfGeneratorService pdfGenerator,
+    IStorageService storageService) : INotificationHandler<ContractSignedEvent>
 {
     public async Task Handle(ContractSignedEvent evt, CancellationToken ct)
     {
@@ -27,11 +28,10 @@ public class ContractSignedEventHandler(
             var slot = await slotRepository.GetByIdAsync(evt.SlotId, ct);
             if (slot is not null && slot.Status != SlotStatus.Occupied)
             {
-                // Reserved → Occupied（若尚未 Reserve 则直接 Reserve+Confirm）
                 if (slot.Status == SlotStatus.Available)
                     slot.Reserve(evt.InvestorUserId);
 
-                slot.Confirm();   // Status = Occupied
+                slot.Confirm();
                 await slotRepository.UpdateAsync(slot, ct);
             }
         }
@@ -40,26 +40,24 @@ public class ContractSignedEventHandler(
             Console.Error.WriteLine($"[ContractSignedEventHandler] Slot update failed for slot {evt.SlotId}: {ex.Message}");
         }
 
-        // ── 2. 生成合同 PDF ───────────────────────────────────────────
+        // ── 2. 生成 PDF 并上传 MinIO ──────────────────────────────────
         try
         {
-            var pdfBytes = await pdfGenerator.GenerateContractPdfAsync(evt.ContractId, ct);
+            var pdfBytes   = await pdfGenerator.GenerateContractPdfAsync(evt.ContractId, ct);
+            var objectName = $"contracts/{evt.ContractId}.pdf";
 
-            var storagePath = $"contracts/{evt.ContractId}.pdf";
-            var dir = Path.GetDirectoryName(storagePath);
-            if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-            await File.WriteAllBytesAsync(storagePath, pdfBytes, ct);
+            await storageService.UploadAsync(objectName, pdfBytes, "application/pdf", ct);
 
             var contract = await contractRepository.GetByIdAsync(evt.ContractId, ct);
             if (contract is not null)
             {
-                contract.PdfGenerated(storagePath);
+                contract.PdfGenerated(objectName);   // 存储 objectName，而非本地路径
                 await contractRepository.UpdateAsync(contract, ct);
             }
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"[ContractSignedEventHandler] PDF generation failed for {evt.ContractId}: {ex.Message}");
+            Console.Error.WriteLine($"[ContractSignedEventHandler] PDF generation/upload failed for {evt.ContractId}: {ex.Message}");
         }
     }
 }

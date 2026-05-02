@@ -61,3 +61,8 @@ export interface CreateContractRequest {
 export interface SubmitSignatureRequest {
   signatureDataUrl: string
 }
+
+export interface SignContractResult {
+  clientUsername?: string
+  initialPassword?: string
+}

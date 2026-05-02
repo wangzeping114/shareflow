@@ -19,7 +19,7 @@ public class ESignController(IESignService eSignService) : ControllerBase
     [HttpPost("{token}")]
     public async Task<IActionResult> SignAsync(string token, [FromBody] SubmitSignatureRequest request, CancellationToken ct)
     {
-        await eSignService.SignAsync(token, request.SignatureDataUrl, ct);
-        return Ok(ApiResponse<object>.Success(new { message = "签约成功" }));
+        var result = await eSignService.SignAsync(token, request.SignatureDataUrl, ct);
+        return Ok(ApiResponse<SignContractResult>.Success(result));
     }
 }

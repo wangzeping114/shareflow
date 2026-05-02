@@ -91,8 +91,27 @@ const router = createRouter({
       children: [
         {
           path: '',
-          name: 'sales-home',
-          component: () => import('../views/sales/SalesHomeView.vue'),
+          redirect: '/sales/dashboard',
+        },
+        {
+          path: 'dashboard',
+          name: 'sales-dashboard',
+          component: () => import('../views/sales/dashboard/SalesDashboardView.vue'),
+        },
+        {
+          path: 'leads',
+          name: 'sales-leads',
+          component: () => import('../views/sales/leads/LeadsView.vue'),
+        },
+        {
+          path: 'projects',
+          name: 'sales-projects',
+          component: () => import('../views/sales/projects/SalesProjectsView.vue'),
+        },
+        {
+          path: 'contracts',
+          name: 'sales-contracts',
+          component: () => import('../views/sales/contracts/SalesContractsView.vue'),
         },
       ],
     },
@@ -103,8 +122,22 @@ const router = createRouter({
       children: [
         {
           path: '',
-          name: 'client-home',
-          component: () => import('../views/client/ClientHomeView.vue'),
+          redirect: '/client/dashboard',
+        },
+        {
+          path: 'dashboard',
+          name: 'client-dashboard',
+          component: () => import('../views/client/dashboard/ClientDashboardView.vue'),
+        },
+        {
+          path: 'dividends',
+          name: 'client-dividends',
+          component: () => import('../views/client/dividends/ClientDividendsView.vue'),
+        },
+        {
+          path: 'contracts',
+          name: 'client-contracts',
+          component: () => import('../views/client/contracts/ClientContractsView.vue'),
         },
         {
           path: 'wallet',

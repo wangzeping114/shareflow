@@ -7,8 +7,8 @@ public interface IESignService
     /// <summary>验证 Token 有效性，返回合同预览数据（公开端点，无需登录）</summary>
     Task<ContractPreviewDto> GetPreviewAsync(string token, CancellationToken ct = default);
 
-    /// <summary>投资人提交 Canvas 签名并完成签约</summary>
-    Task SignAsync(string token, string signatureDataUrl, CancellationToken ct = default);
+    /// <summary>投资人提交 Canvas 签名并完成签约，返回初始账号信息（首次签约时）</summary>
+    Task<SignContractResult> SignAsync(string token, string signatureDataUrl, CancellationToken ct = default);
 }
 
 public interface IPdfGeneratorService

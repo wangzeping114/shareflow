@@ -4,10 +4,14 @@ using ShareFlow.Application.Contracts.Interfaces;
 using ShareFlow.Domain.Events;
 using ShareFlow.Domain.Common;
 using ShareFlow.Domain.Interfaces;
+using ShareFlow.Infrastructure.Contracts;
 
 namespace ShareFlow.Infrastructure.ESign;
 
-public class ESignService(IContractRepository contractRepo, IMediator mediator) : IESignService
+public class ESignService(
+    IContractRepository contractRepo,
+    IUserRepository userRepo,
+    IMediator mediator) : IESignService
 {
     public async Task<ContractPreviewDto> GetPreviewAsync(string token, CancellationToken ct = default)
     {
@@ -29,16 +33,41 @@ public class ESignService(IContractRepository contractRepo, IMediator mediator) 
         };
     }
 
-    public async Task SignAsync(string token, string signatureDataUrl, CancellationToken ct = default)
+    public async Task<SignContractResult> SignAsync(string token, string signatureDataUrl, CancellationToken ct = default)
     {
         var contract = await contractRepo.GetBySignTokenAsync(token, ct)
             ?? throw new BusinessException("签约链接无效或已过期", 404);
 
         contract.Sign(signatureDataUrl);
 
+        // 将签名日期嵌入快照
+        if (!string.IsNullOrEmpty(contract.ContractSnapshot) && contract.SignedAt.HasValue)
+        {
+            var signedDateStr = contract.SignedAt.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss");
+            var updatedSnapshot = ContractTemplateService.EmbedSignature(contract.ContractSnapshot, signedDateStr);
+            contract.UpdateSnapshot(updatedSnapshot);
+        }
+
         await contractRepo.UpdateAsync(contract, ct);
+
+        // 获取初始账号信息（仅首次签约时有值，取后清空 DB）
+        string? clientUsername = null;
+        string? initialPassword = null;
+        var investorUser = await userRepo.GetByIdAsync(contract.InvestorUserId, ct);
+        if (investorUser is not null && investorUser.InitialPassword is not null)
+        {
+            clientUsername = investorUser.Username;
+            initialPassword = investorUser.TakeInitialPassword();
+            await userRepo.UpdateAsync(investorUser, ct);
+        }
 
         await mediator.Publish(
             new ContractSignedEvent(contract.Id, contract.InvestorUserId, contract.ProjectId, contract.SlotId), ct);
+
+        return new SignContractResult
+        {
+            ClientUsername = clientUsername,
+            InitialPassword = initialPassword
+        };
     }
 }
