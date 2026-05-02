@@ -1,11 +1,20 @@
 <script setup lang="ts">
 import { h, ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import {
-  NDataTable, NFlex, NSpin, NTag, NButton, useMessage,
+  NDataTable, NSpin, NTag, NButton, useMessage,
   type DataTableColumns,
 } from 'naive-ui'
 import { getClientContracts, getContractPdfPath } from '../../../api/client/dashboard'
+import { useRegion } from '../../../composables/use-region'
 import type { ClientContractDto } from '../../../types/client'
+
+const { t } = useI18n()
+const { clientLocale } = useRegion()
+
+function fmtDate(iso: string) {
+  return new Date(iso).toLocaleDateString(clientLocale, { year: 'numeric', month: 'short', day: 'numeric' })
+}
 
 const message = useMessage()
 const list = ref<ClientContractDto[]>([])
@@ -23,17 +32,17 @@ async function fetchList() {
 onMounted(fetchList)
 
 async function downloadPdf(row: ClientContractDto) {
-  if (!row.hasPdf) { message.warning('该合同暂无 PDF'); return }
+  if (!row.hasPdf) { message.warning(t('client.noPdfAvailable')); return }
   downloadingIds.value.add(row.id)
   try {
     const result = await getContractPdfPath(row.id)
     if (result?.path) {
       window.open(result.path, '_blank')
     } else {
-      message.warning('PDF 暂不可用')
+      message.warning(t('client.pdfNotReady'))
     }
   } catch {
-    message.error('获取下载链接失败')
+    message.error(t('client.fetchLinkFailed'))
   } finally {
     downloadingIds.value.delete(row.id)
   }
@@ -51,37 +60,37 @@ const statusTagType: Record<string, 'default' | 'info' | 'success' | 'warning' |
 }
 
 const columns: DataTableColumns<ClientContractDto> = [
-  { title: '项目名称', key: 'projectTitle', ellipsis: { tooltip: true } },
-  { title: '平台', key: 'platformName', width: 120 },
+  { title: t('client.col.project'), key: 'projectTitle', ellipsis: { tooltip: true } },
+  { title: t('client.col.platform'), key: 'platformName', width: 160 },
   {
-    title: '持股比例',
+    title: t('client.col.equityPct'),
     key: 'sharePermille',
     width: 100,
     render: row => `${(row.sharePermille / 10).toFixed(2)}%`,
   },
   {
-    title: '状态',
+    title: t('client.col.status'),
     key: 'status',
     width: 110,
     render: row => h(NTag, { type: statusTagType[row.status] ?? 'default', size: 'small' },
       () => row.statusLabel),
   },
   {
-    title: '签署时间',
+    title: t('client.col.signedDate'),
     key: 'signedAt',
     width: 160,
-    render: row => row.signedAt ? new Date(row.signedAt).toLocaleDateString('zh-CN') : '—',
+    render: row => row.signedAt ? fmtDate(row.signedAt) : '—',
   },
   {
-    title: '操作',
+    title: t('client.col.actions'),
     key: 'actions',
-    width: 120,
+    width: 130,
     render: row => h(NButton, {
       size: 'small',
       disabled: !row.hasPdf || downloadingIds.value.has(row.id),
       loading: downloadingIds.value.has(row.id),
       onClick: () => downloadPdf(row),
-    }, () => '下载 PDF'),
+    }, () => t('client.downloadPdf')),
   },
 ]
 </script>

@@ -1,11 +1,20 @@
 <script setup lang="ts">
 import { h, ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import {
-  NDataTable, NFlex, NPagination, NSpin, NTag, NText, NSelect,
+  NDataTable, NFlex, NPagination, NSpin, NTag, NText,
   type DataTableColumns,
 } from 'naive-ui'
 import { getClientDividends } from '../../../api/client/dashboard'
+import { useRegion } from '../../../composables/use-region'
 import type { ClientDividendDto } from '../../../types/client'
+
+const { t } = useI18n()
+const { clientLocale } = useRegion()
+
+function fmtDate(iso: string) {
+  return new Date(iso).toLocaleDateString(clientLocale, { year: 'numeric', month: 'short', day: 'numeric' })
+}
 
 const list = ref<ClientDividendDto[]>([])
 const total = ref(0)
@@ -32,38 +41,38 @@ const statusTagType: Record<string, 'default' | 'info' | 'warning' | 'success'> 
 }
 
 const columns: DataTableColumns<ClientDividendDto> = [
-  { title: '项目名称', key: 'projectTitle', ellipsis: { tooltip: true } },
-  { title: '平台', key: 'platformName', width: 120 },
+  { title: t('client.col.project'), key: 'projectTitle', ellipsis: { tooltip: true } },
+  { title: t('client.col.platform'), key: 'platformName', width: 160 },
   {
-    title: '持股比例',
+    title: t('client.col.equityPct'),
     key: 'sharePermille',
     width: 100,
     render: row => `${(row.sharePermille / 10).toFixed(2)}%`,
   },
   {
-    title: '收益基数',
+    title: t('client.col.revenueBase'),
     key: 'revenueAmount',
-    width: 130,
+    width: 150,
     render: row => `${row.revenueAmount.toFixed(2)} ${row.currency}`,
   },
   {
-    title: '分红金额',
+    title: t('client.col.dividendAmount'),
     key: 'dividendAmount',
-    width: 140,
+    width: 160,
     render: row => h(NText, { type: 'success', style: 'font-weight:600' },
       () => `${row.dividendAmount.toFixed(2)} ${row.currency}`),
   },
   {
-    title: '状态',
+    title: t('client.col.status'),
     key: 'status',
-    width: 90,
+    width: 100,
     render: row => h(NTag, { type: statusTagType[row.status] ?? 'default', size: 'small' }, () => row.statusLabel),
   },
   {
-    title: '时间',
+    title: t('client.col.date'),
     key: 'calculatedAt',
     width: 160,
-    render: row => new Date(row.calculatedAt).toLocaleDateString('zh-CN'),
+    render: row => fmtDate(row.calculatedAt),
   },
 ]
 </script>

@@ -1,5 +1,3 @@
-import type { WithdrawalStatus } from './wallet'
-
 export interface WalletDto {
   id: string
   investorUserId: string

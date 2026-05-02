@@ -1,12 +1,24 @@
 <script setup lang="ts">
-import { h, ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import {
-  NCard, NFlex, NText, NStatistic, NDivider, NTimeline, NTimelineItem,
+  NCard, NFlex, NText, NStatistic, NTimeline, NTimelineItem,
   NButton, NModal, NForm, NFormItem, NInputNumber, NInput, NTag,
   NPagination, useMessage,
 } from 'naive-ui'
 import { getMyWallet, getMyTransactions, requestWithdrawal, getMyWithdrawals } from '../../../api/public/wallet'
+import { useRegion } from '../../../composables/use-region'
 import type { WalletDto, WalletTransactionDto, WithdrawalRequestDto, WithdrawalStatus } from '../../../types/wallet'
+
+const { t } = useI18n()
+const { clientLocale } = useRegion()
+
+function fmtDate(iso: string) {
+  return new Date(iso).toLocaleDateString(clientLocale, { year: 'numeric', month: 'short', day: 'numeric' })
+}
+function fmtDateTime(iso: string) {
+  return new Date(iso).toLocaleString(clientLocale, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+}
 
 const message = useMessage()
 
@@ -65,44 +77,44 @@ const withdrawPayment = ref('')
 const withdrawLoading = ref(false)
 
 async function handleWithdraw() {
-  if (!withdrawAmount.value || withdrawAmount.value <= 0) { message.warning('请输入有效金额'); return }
-  if (!wallet.value || withdrawAmount.value > wallet.value.balance) { message.warning('余额不足'); return }
+  if (!withdrawAmount.value || withdrawAmount.value <= 0) { message.warning(t('client.withdrawal.invalidAmount')); return }
+  if (!wallet.value || withdrawAmount.value > wallet.value.balance) { message.warning(t('client.withdrawal.insufficientBalance')); return }
   withdrawLoading.value = true
   try {
     await requestWithdrawal(withdrawAmount.value, withdrawPayment.value || undefined)
-    message.success('提现申请已提交，等待管理员审核')
+    message.success(t('client.withdrawal.submitted'))
     showWithdraw.value = false
     fetchWallet()
     fetchWithdrawals()
   } catch (e: any) {
-    message.error(e?.response?.data?.message ?? '提申失败')
+    message.error(e?.response?.data?.message ?? t('client.withdrawal.failed'))
   } finally {
     withdrawLoading.value = false
   }
 }
 
 const statusTagMap: Record<WithdrawalStatus, { type: 'default' | 'info' | 'warning' | 'success' | 'error'; label: string }> = {
-  Pending: { type: 'warning', label: '待审核' },
-  Approved: { type: 'info', label: '已批准' },
-  Rejected: { type: 'error', label: '已拒绝' },
-  Completed: { type: 'success', label: '已完成' },
+  Pending:   { type: 'warning', label: t('client.withdrawal.statusPending') },
+  Approved:  { type: 'info',    label: t('client.withdrawal.statusApproved') },
+  Rejected:  { type: 'error',   label: t('client.withdrawal.statusRejected') },
+  Completed: { type: 'success', label: t('client.withdrawal.statusCompleted') },
 }
 </script>
 
 <template>
-  <div style="padding: 24px; max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px;">
-    <!-- 余额卡片 -->
-    <NCard title="我的钱包" :loading="walletLoading">
+  <div style="padding: 24px; max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px;">
+    <!-- Wallet balance card -->
+    <NCard :title="t('client.myWallet')" :loading="walletLoading">
       <template v-if="wallet">
         <NFlex :gap="32" align="flex-end">
-          <NStatistic label="可用余额">
+          <NStatistic :label="t('client.availableBalance')">
             <template #default>
               <NText type="success" style="font-size: 32px; font-weight: 700;">
                 {{ wallet.balance.toFixed(2) }} {{ wallet.currency }}
               </NText>
             </template>
           </NStatistic>
-          <NStatistic v-if="wallet.frozenAmount > 0" label="冻结中（提现审核）">
+          <NStatistic v-if="wallet.frozenAmount > 0" :label="t('client.frozenBalance')">
             <NText type="warning" style="font-size: 20px;">
               {{ wallet.frozenAmount.toFixed(2) }} {{ wallet.currency }}
             </NText>
@@ -113,24 +125,24 @@ const statusTagMap: Record<WithdrawalStatus, { type: 'default' | 'info' | 'warni
             :disabled="!wallet || wallet.balance <= 0"
             @click="showWithdraw = true"
           >
-            申请提现
+            {{ t('client.requestWithdrawal') }}
           </NButton>
         </NFlex>
       </template>
-      <NText v-else depth="3">钱包尚未初始化，分红到账后将自动创建</NText>
+      <NText v-else depth="3">{{ t('client.walletEmpty') }}</NText>
     </NCard>
 
-    <!-- 最近提现记录 -->
-    <NCard v-if="withdrawals.length > 0" title="提现记录">
-      <div v-for="w in withdrawals" :key="w.id" style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;">
-        <NText>{{ w.amount.toFixed(2) }} {{ w.currency }}</NText>
-        <NText depth="3">{{ new Date(w.createdAt).toLocaleDateString('zh-CN') }}</NText>
+    <!-- Withdrawal history -->
+    <NCard v-if="withdrawals.length > 0" :title="t('client.withdrawalHistory')">
+      <div v-for="w in withdrawals" :key="w.id" style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f0f0f0;">
+        <NText style="font-weight:600">{{ w.amount.toFixed(2) }} {{ w.currency }}</NText>
+        <NText depth="3" style="font-size:13px">{{ fmtDate(w.createdAt) }}</NText>
         <NTag :type="statusTagMap[w.status].type" size="small">{{ statusTagMap[w.status].label }}</NTag>
       </div>
     </NCard>
 
-    <!-- 流水 Timeline -->
-    <NCard title="资金流水">
+    <!-- Transaction history -->
+    <NCard :title="t('client.transactionHistory')">
       <NTimeline v-if="txList.length > 0">
         <NTimelineItem
           v-for="tx in txList"
@@ -138,10 +150,10 @@ const statusTagMap: Record<WithdrawalStatus, { type: 'default' | 'info' | 'warni
           :type="tx.direction === 'In' ? 'success' : 'error'"
           :title="`${tx.typeLabel}  ${tx.directionLabel}${tx.amount.toFixed(2)} ${tx.currency}`"
           :content="tx.remark"
-          :time="new Date(tx.createdAt).toLocaleString('zh-CN')"
+          :time="fmtDateTime(tx.createdAt)"
         />
       </NTimeline>
-      <NText v-else depth="3">暂无流水记录</NText>
+      <NText v-else depth="3">{{ t('client.noTransactions') }}</NText>
       <NFlex justify="end" style="margin-top: 16px;">
         <NPagination
           v-model:page="txPage"
@@ -152,27 +164,27 @@ const statusTagMap: Record<WithdrawalStatus, { type: 'default' | 'info' | 'warni
       </NFlex>
     </NCard>
 
-    <!-- 提现申请弹窗 -->
-    <NModal v-model:show="showWithdraw" title="申请提现" preset="card" style="width: 440px;">
-      <NForm label-placement="left" label-width="90">
-        <NFormItem label="提现金额">
+    <!-- Withdrawal request modal -->
+    <NModal v-model:show="showWithdraw" :title="t('client.withdrawal.title')" preset="card" style="width: 480px;">
+      <NForm label-placement="top">
+        <NFormItem :label="t('client.withdrawal.amount')">
           <NInputNumber
             v-model:value="withdrawAmount"
-            placeholder="请输入金额"
+            :placeholder="t('client.withdrawal.amountPlaceholder')"
             :min="0.01"
             :max="wallet?.balance ?? undefined"
             :precision="2"
             style="width: 100%;"
           />
         </NFormItem>
-        <NFormItem label="收款方式">
-          <NInput v-model:value="withdrawPayment" type="textarea" placeholder="银行账号 / 支付宝 / 收款人等（线下入账信息）" :rows="3" />
+        <NFormItem :label="t('client.withdrawal.paymentDetails')">
+          <NInput v-model:value="withdrawPayment" type="textarea" :placeholder="t('client.withdrawal.paymentPlaceholder')" :rows="3" />
         </NFormItem>
       </NForm>
       <template #footer>
         <NFlex justify="end" gap="8">
-          <NButton @click="showWithdraw = false">取消</NButton>
-          <NButton type="primary" :loading="withdrawLoading" @click="handleWithdraw">提交申请</NButton>
+          <NButton @click="showWithdraw = false">{{ t('client.withdrawal.cancel') }}</NButton>
+          <NButton type="primary" :loading="withdrawLoading" @click="handleWithdraw">{{ t('client.withdrawal.submit') }}</NButton>
         </NFlex>
       </template>
     </NModal>

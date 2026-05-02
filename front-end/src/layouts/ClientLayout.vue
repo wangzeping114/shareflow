@@ -5,6 +5,7 @@ import {
   NLayout, NLayoutSider, NLayoutHeader, NLayoutContent,
   NMenu, NFlex, NText, NButton, NAvatar,
   NMessageProvider, NDialogProvider, NNotificationProvider, NConfigProvider,
+  enUS, dateEnUS, zhCN, dateZhCN,
   type MenuOption,
 } from 'naive-ui'
 import { useI18n } from 'vue-i18n'
@@ -21,6 +22,8 @@ const route = useRoute()
 
 const activeKey = computed(() => route.name as string | null)
 const isCN = computed(() => locale.value === 'zh-CN')
+const naiveLocale = computed(() => isCN.value ? zhCN : enUS)
+const naiveDateLocale = computed(() => isCN.value ? dateZhCN : dateEnUS)
 
 const menuOptions: MenuOption[] = [
   {
@@ -64,7 +67,7 @@ async function handleLogout() {
 </script>
 
 <template>
-  <n-config-provider>
+  <n-config-provider :locale="naiveLocale" :date-locale="naiveDateLocale">
     <n-message-provider>
       <n-notification-provider>
         <n-dialog-provider>

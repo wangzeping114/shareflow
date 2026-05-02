@@ -15,4 +15,5 @@ public static class Permissions
     public const string UserManage = "user.manage";
     public const string RoleManage = "role.manage";
     public const string ReportRead = "report.read";
+    public const string DashboardRead = "dashboard.read";
 }
