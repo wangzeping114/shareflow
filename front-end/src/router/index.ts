@@ -70,6 +70,11 @@ const router = createRouter({
           name: 'admin-withdrawals',
           component: () => import('../views/admin/wallet/WithdrawalRequestListView.vue'),
         },
+        {
+          path: 'roles',
+          name: 'admin-roles',
+          component: () => import('../views/admin/roles/RoleListView.vue'),
+        },
       ],
     },
     {

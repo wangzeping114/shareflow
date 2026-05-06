@@ -13,4 +13,8 @@ public interface IRoleService
     Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task AssignRoleToUserAsync(Guid userId, AssignBackendRoleRequest request, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<InternalUserDto>> GetInternalUsersAsync(CancellationToken cancellationToken = default);
+
+    Task<InternalUserDto> CreateInternalUserAsync(CreateInternalUserRequest request, CancellationToken cancellationToken = default);
 }

@@ -29,4 +29,5 @@ public interface IUserRepository
 
     /// <summary>按姓名或邮箱关键字搜索（用于钱包/提现管理过滤）</summary>
     Task<IReadOnlyList<Guid>> SearchIdsByKeywordAsync(string keyword, CancellationToken cancellationToken = default);
-}
+    /// <summary>返回所有内部账号（BackendCustom + Sales），包含 BackendRole 导航属性</summary>
+    Task<IReadOnlyList<User>> GetInternalUsersAsync(CancellationToken cancellationToken = default);}

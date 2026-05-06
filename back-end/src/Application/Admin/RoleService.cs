@@ -66,4 +66,57 @@ public class RoleService(
 
         await userRepository.UpdateAsync(user, cancellationToken);
     }
+
+    public async Task<IReadOnlyList<InternalUserDto>> GetInternalUsersAsync(CancellationToken cancellationToken = default)
+    {
+        var users = await userRepository.GetInternalUsersAsync(cancellationToken);
+        return users.Select(u => new InternalUserDto
+        {
+            Id = u.Id,
+            Username = u.Username,
+            Email = u.Email,
+            DisplayName = u.DisplayName,
+            Role = u.Role.ToString(),
+            BackendRoleId = u.BackendRoleId,
+            BackendRoleName = u.BackendRole?.Name,
+            Status = u.Status.ToString(),
+            CreatedAt = u.CreatedAt
+        }).ToList();
+    }
+
+    public async Task<InternalUserDto> CreateInternalUserAsync(CreateInternalUserRequest request, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(request.Username))
+            throw new BusinessException("用户名不能为空。", 400);
+        if (string.IsNullOrWhiteSpace(request.Password))
+            throw new BusinessException("密码不能为空。", 400);
+        if (await userRepository.ExistsByUsernameAsync(request.Username, cancellationToken))
+            throw new BusinessException("用户名已存在。", 409);
+        if (await userRepository.ExistsByEmailAsync(request.Email, cancellationToken))
+            throw new BusinessException("邮筱已存在。", 409);
+
+        var role = request.Role == "Sales" ? UserRole.Sales : UserRole.BackendCustom;
+        var user = User.Create(request.Username, request.Email, request.Password, request.DisplayName, role);
+
+        if (request.BackendRoleId.HasValue && role == UserRole.BackendCustom)
+        {
+            var backendRole = await backendRoleRepository.GetByIdAsync(request.BackendRoleId.Value, cancellationToken)
+                ?? throw new BusinessException("后台角色不存在。", 404);
+            user.AssignRole(UserRole.BackendCustom, backendRole.Id);
+        }
+
+        await userRepository.AddAsync(user, cancellationToken);
+
+        return new InternalUserDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            DisplayName = user.DisplayName,
+            Role = user.Role.ToString(),
+            BackendRoleId = user.BackendRoleId,
+            Status = user.Status.ToString(),
+            CreatedAt = user.CreatedAt
+        };
+    }
 }

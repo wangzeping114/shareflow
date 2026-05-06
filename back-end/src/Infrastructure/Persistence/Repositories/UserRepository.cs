@@ -78,6 +78,16 @@ public class UserRepository(AppDbContext dbContext) : IUserRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<User>> GetInternalUsersAsync(CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Users
+            .AsNoTracking()
+            .Include(u => u.BackendRole)
+            .Where(u => (u.Role == UserRole.BackendCustom || u.Role == UserRole.Sales) && !u.IsDeleted)
+            .OrderBy(u => u.DisplayName)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<User>> GetByIdsAsync(IReadOnlyList<Guid> ids, CancellationToken cancellationToken = default)
     {
         return await dbContext.Users

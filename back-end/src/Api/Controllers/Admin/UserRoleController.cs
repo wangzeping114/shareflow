@@ -16,6 +16,22 @@ namespace ShareFlow.Api.Controllers.Admin;
 [Permission(Permissions.UserManage)]
 public class UserRoleController(IRoleService roleService, IUserRepository userRepository) : ControllerBase
 {
+    /// <summary>获取所有内部账号（BackendCustom + Sales）</summary>
+    [HttpGet("internal")]
+    public async Task<IActionResult> GetInternalUsersAsync(CancellationToken ct)
+    {
+        var users = await roleService.GetInternalUsersAsync(ct);
+        return Ok(ApiResponse<IReadOnlyList<InternalUserDto>>.Success(users));
+    }
+
+    /// <summary>创建内部账号</summary>
+    [HttpPost("internal")]
+    public async Task<IActionResult> CreateInternalUserAsync([FromBody] CreateInternalUserRequest request, CancellationToken ct)
+    {
+        var user = await roleService.CreateInternalUserAsync(request, ct);
+        return Ok(ApiResponse<InternalUserDto>.Success(user));
+    }
+
     /// <summary>获取所有 Client 角色用户（合同投资人选择器用）</summary>
     [HttpGet("clients")]
     public async Task<IActionResult> GetClientsAsync(CancellationToken ct)
