@@ -36,6 +36,8 @@ export interface UpdateLeadRequest {
 
 export interface SalesProjectSlotDto {
   id: string
+  slotNumber: number
+  alias?: string
   sharePermille: number
 }
 
@@ -101,6 +103,8 @@ export interface SalesContractDto {
   id: string
   projectTitle: string
   slotId: string
+  slotNumber: number
+  slotAlias?: string
   sharePermille: number
   clientName: string
   status: SalesContractStatus

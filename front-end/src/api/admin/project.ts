@@ -60,4 +60,11 @@ export const projectApi = {
       data
     ).then(r => r.data.data)
   },
+
+  updateSlotAlias(projectId: string, slotId: string, alias: string | null) {
+    return http.patch<ApiResponse<ProjectSlot>>(
+      `/v1/admin/projects/${projectId}/slots/${slotId}/alias`,
+      { alias }
+    ).then(r => r.data.data)
+  },
 }

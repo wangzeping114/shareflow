@@ -141,20 +141,20 @@ public class ProjectSlotEntityTests
     [Fact]
     public void Create_ValidArgs_StatusIsAvailable()
     {
-        var slot = ProjectSlot.Create(Guid.NewGuid(), 5m);
+        var slot = ProjectSlot.Create(Guid.NewGuid(), 5m, 1);
         Assert.Equal(SlotStatus.Available, slot.Status);
     }
 
     [Fact]
     public void Create_ZeroSharePermille_ThrowsArgumentException()
     {
-        Assert.Throws<ArgumentException>(() => ProjectSlot.Create(Guid.NewGuid(), 0m));
+        Assert.Throws<ArgumentException>(() => ProjectSlot.Create(Guid.NewGuid(), 0m, 1));
     }
 
     [Fact]
     public void Reserve_AvailableSlot_StatusBecomesReserved()
     {
-        var slot = ProjectSlot.Create(Guid.NewGuid(), 5m);
+        var slot = ProjectSlot.Create(Guid.NewGuid(), 5m, 1);
         var clientId = Guid.NewGuid();
         slot.Reserve(clientId);
 
@@ -165,7 +165,7 @@ public class ProjectSlotEntityTests
     [Fact]
     public void Reserve_AlreadyReserved_ThrowsInvalidOperation()
     {
-        var slot = ProjectSlot.Create(Guid.NewGuid(), 5m);
+        var slot = ProjectSlot.Create(Guid.NewGuid(), 5m, 1);
         slot.Reserve(Guid.NewGuid());
         Assert.Throws<InvalidOperationException>(() => slot.Reserve(Guid.NewGuid()));
     }
@@ -173,7 +173,7 @@ public class ProjectSlotEntityTests
     [Fact]
     public void Confirm_ReservedSlot_StatusBecomesOccupied()
     {
-        var slot = ProjectSlot.Create(Guid.NewGuid(), 5m);
+        var slot = ProjectSlot.Create(Guid.NewGuid(), 5m, 1);
         slot.Reserve(Guid.NewGuid());
         slot.Confirm();
         Assert.Equal(SlotStatus.Occupied, slot.Status);
@@ -182,14 +182,14 @@ public class ProjectSlotEntityTests
     [Fact]
     public void Confirm_NotReserved_ThrowsInvalidOperation()
     {
-        var slot = ProjectSlot.Create(Guid.NewGuid(), 5m);
+        var slot = ProjectSlot.Create(Guid.NewGuid(), 5m, 1);
         Assert.Throws<InvalidOperationException>(() => slot.Confirm());
     }
 
     [Fact]
     public void Release_AnyStatus_ClearsClientAndBecomesAvailable()
     {
-        var slot = ProjectSlot.Create(Guid.NewGuid(), 5m);
+        var slot = ProjectSlot.Create(Guid.NewGuid(), 5m, 1);
         slot.Reserve(Guid.NewGuid());
         slot.Release();
 

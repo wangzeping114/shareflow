@@ -6,6 +6,7 @@ import {
   NDescriptions,
   NDescriptionsItem,
   NFlex,
+  NInput,
   NInputNumber,
   NModal,
   NCard,
@@ -101,7 +102,13 @@ const templateLabel: Record<string, string> = {
 
 const slotColumns: DataTableColumns<ProjectSlot> = [
   { type: 'selection' },
-  { title: '编号', key: 'index', width: 60, render: (_, idx) => h(NText, {}, () => String(idx + 1)) },
+  { title: '编号', key: 'slotNumber', width: 60, render: (row) => h(NText, {}, () => `#${row.slotNumber}`) },
+  {
+    title: '别名',
+    key: 'alias',
+    width: 120,
+    render: (row) => h(NText, { style: row.alias ? '' : 'opacity:0.4' }, () => row.alias ?? '未设置'),
+  },
   {
     title: '持股比例',
     key: 'sharePct',
@@ -140,6 +147,7 @@ const slotColumns: DataTableColumns<ProjectSlot> = [
     render: (row) =>
       h(NFlex, { gap: 6 }, () => [
         h(NButton, { size: 'small', secondary: true, onClick: () => openContractPreview(row) }, () => '预览合同'),
+        h(NButton, { size: 'small', secondary: true, onClick: () => openEditAlias(row) }, () => '设别名'),
         h(NButton, {
           size: 'small', secondary: true,
           disabled: row.status === 'Occupied',
@@ -192,6 +200,33 @@ async function batchApply() {
     message.error('批量更新失败')
   } finally {
     batchApplying.value = false
+  }
+}
+
+// ── 编辑别名 ──────────────────────────
+const showEditAlias = ref(false)
+const editAliasSlot = ref<ProjectSlot | null>(null)
+const editAliasValue = ref('')
+const editAliasLoading = ref(false)
+
+function openEditAlias(slot: ProjectSlot) {
+  editAliasSlot.value = slot
+  editAliasValue.value = slot.alias ?? ''
+  showEditAlias.value = true
+}
+
+async function handleEditAlias() {
+  if (!editAliasSlot.value) return
+  editAliasLoading.value = true
+  try {
+    await projectApi.updateSlotAlias(projectId, editAliasSlot.value.id, editAliasValue.value.trim() || null)
+    message.success('别名已更新')
+    showEditAlias.value = false
+    fetchDetail()
+  } catch {
+    message.error('更新失败')
+  } finally {
+    editAliasLoading.value = false
   }
 }
 
@@ -501,6 +536,33 @@ async function handleAddSlot() {
       </n-flex>
     </n-modal>
 
+    <!-- 设置槽位别名弹窗 -->
+    <n-modal
+      v-model:show="showEditAlias"
+      title="设置槽位别名"
+      preset="card"
+      style="width: 360px"
+    >
+      <n-text depth="3" style="display: block; margin-bottom: 12px">
+        槽位 #{{ editAliasSlot?.slotNumber }}　当前别名：{{ editAliasSlot?.alias ?? '未设置' }}
+      </n-text>
+      <n-form label-placement="top">
+        <n-form-item label="别名（最长 50 字符，留空则清除）">
+          <n-input
+            v-model:value="editAliasValue"
+            :maxlength="50"
+            show-count
+            clearable
+            placeholder="例：A座 / 贵用-1"
+          />
+        </n-form-item>
+      </n-form>
+      <n-flex justify="end" gap="12" style="margin-top: 16px">
+        <n-button @click="showEditAlias = false">取消</n-button>
+        <n-button type="primary" :loading="editAliasLoading" @click="handleEditAlias">确认修改</n-button>
+      </n-flex>
+    </n-modal>
+
     <!-- 修改持股比例弹窗 -->
     <n-modal
       v-model:show="showEditSharePct"
@@ -509,7 +571,7 @@ async function handleAddSlot() {
       style="width: 360px"
     >
       <n-text depth="3" style="display: block; margin-bottom: 12px">
-        槽位 #{{ (project?.slots?.findIndex(s => s.id === editSharePctSlot?.id) ?? -1) + 1 }}
+        槽位 #{{ editSharePctSlot?.slotNumber }}
         &nbsp;当前：{{ editSharePctSlot?.sharePct }}%
       </n-text>
       <n-form label-placement="top">
@@ -539,7 +601,7 @@ async function handleAddSlot() {
         <template #header>
           <span>合同模板预览</span>
           <n-text depth="3" style="font-size: 13px; margin-left: 8px">
-            — 槽位 #{{ (project?.slots?.findIndex(s => s.id === previewSlot?.id) ?? -1) + 1 }}
+            — 槽位 #{{ previewSlot?.slotNumber }}
             &nbsp;|&nbsp;{{ previewSlot?.sharePct }}%
             &nbsp;|&nbsp;{{ currency }}
           </n-text>

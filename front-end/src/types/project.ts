@@ -20,6 +20,8 @@ export interface Project {
 
 export interface ProjectSlot {
   id: string
+  slotNumber: number
+  alias?: string
   sharePct: number
   status: SlotStatus
   clientUserId?: string

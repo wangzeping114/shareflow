@@ -66,7 +66,7 @@ const selectedProject = computed(() => projects.value.find(p => p.id === form.va
 
 const slotOptions = computed(() =>
   (selectedProject.value?.slots ?? []).map(s => ({
-    label: `槽位 ${s.id.slice(0, 8)}...（${(s.sharePermille / 10).toFixed(2)}%）`,
+    label: s.alias ? `${s.alias}（${(s.sharePermille / 10).toFixed(2)}%）` : `\u69fd\u4f4d #${s.slotNumber}\uff08${(s.sharePermille / 10).toFixed(2)}%\uff09`,
     value: s.id,
   })),
 )
@@ -232,7 +232,7 @@ const columns: DataTableColumns<SalesContractDto> = [
   {
     title: '槽位',
     key: 'slotId',
-    render: row => `槽位 ${row.slotId.slice(0, 8)}...`,
+    render: row => row.slotAlias ? row.slotAlias : `槽位 #${row.slotNumber}`,
   },
   {
     title: '持股比例',
