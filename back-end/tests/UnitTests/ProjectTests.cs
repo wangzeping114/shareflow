@@ -187,13 +187,13 @@ public class ProjectSlotEntityTests
     }
 
     [Fact]
-    public void Release_AnyStatus_ClearsClientAndBecomesReleased()
+    public void Release_AnyStatus_ClearsClientAndBecomesAvailable()
     {
         var slot = ProjectSlot.Create(Guid.NewGuid(), 5m);
         slot.Reserve(Guid.NewGuid());
         slot.Release();
 
-        Assert.Equal(SlotStatus.Released, slot.Status);
+        Assert.Equal(SlotStatus.Available, slot.Status);
         Assert.Null(slot.ClientUserId);
     }
 }

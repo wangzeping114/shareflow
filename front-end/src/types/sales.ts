@@ -52,6 +52,7 @@ export interface SalesClientDto {
   id: string
   name: string
   email: string
+  hasAccount: boolean
 }
 
 export interface InitiateContractRequest {
@@ -82,6 +83,8 @@ export interface SalesContractDetailDto {
   createdAt: string
   clientUsername?: string
   clientInitialPassword?: string
+  signUrl?: string
+  signTokenExpiresAt?: string
 }
 
 export type SalesContractStatus =

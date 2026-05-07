@@ -12,5 +12,6 @@ public interface IProjectService
     Task ChangeStatusAsync(Guid id, ChangeProjectStatusRequest request, Guid operatorId, CancellationToken ct = default);
     Task<SlotDto> AddSlotAsync(Guid projectId, AddSlotRequest request, CancellationToken ct = default);
     Task<SlotDto> UpdateSlotContractMonthsAsync(Guid projectId, Guid slotId, UpdateSlotContractMonthsRequest request, CancellationToken ct = default);
+    Task<SlotDto> UpdateSlotAliasAsync(Guid projectId, Guid slotId, UpdateSlotAliasRequest request, CancellationToken ct = default);
     Task<IReadOnlyList<SlotDto>> BatchUpdateSlotsAsync(Guid projectId, BatchUpdateSlotsRequest request, CancellationToken ct = default);
 }

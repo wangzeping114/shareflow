@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using ShareFlow.Application.Common;
 using ShareFlow.Application.Contracts.DTOs;
 using ShareFlow.Application.Contracts.Interfaces;
@@ -16,7 +17,8 @@ public class SalesService(
     IProjectSlotRepository slotRepository,
     IUserRepository userRepository,
     IContractRepository contractRepository,
-    IContractService contractService) : ISalesService
+    IContractService contractService,
+    IConfiguration configuration) : ISalesService
 {
     public async Task<PagedResult<LeadDto>> GetLeadsAsync(Guid salesUserId, LeadQueryRequest query, CancellationToken ct = default)
     {
@@ -64,6 +66,8 @@ public class SalesService(
                 .Select(s => new SalesProjectSlotDto
                 {
                     Id = s.Id,
+                    SlotNumber = s.SlotNumber,
+                    Alias = s.Alias,
                     SharePermille = s.SharePermille
                 })
                 .ToList();
@@ -91,7 +95,8 @@ public class SalesService(
             {
                 Id = x.Id,
                 Name = x.Name,
-                Email = x.Email ?? string.Empty
+                Email = x.Email ?? string.Empty,
+                HasAccount = x.ClientUserId.HasValue
             })
             .ToList();
     }
@@ -121,6 +126,8 @@ public class SalesService(
                 Id = x.Id,
                 ProjectTitle = x.Project?.Title ?? string.Empty,
                 SlotId = x.SlotId,
+                SlotNumber = x.Slot?.SlotNumber ?? 0,
+                SlotAlias = x.Slot?.Alias,
                 SharePermille = x.Slot?.SharePermille ?? 0m,
                 ClientName = clientNameMap.TryGetValue(x.InvestorUserId, out var name) ? name : string.Empty,
                 Status = x.Status,
@@ -167,7 +174,11 @@ public class SalesService(
             SignedAt = contract.SignedAt,
             CreatedAt = contract.CreatedAt,
             ClientUsername = clientUsername,
-            ClientInitialPassword = clientLead?.ClientInitialPassword
+            ClientInitialPassword = clientLead?.ClientInitialPassword,
+            SignUrl = contract.SignToken is not null && contract.SignTokenExpiresAt > DateTime.UtcNow
+                ? $"{(configuration["FrontendBaseUrl"]?.TrimEnd('/') ?? "")}/esign/{contract.SignToken}"
+                : null,
+            SignTokenExpiresAt = contract.SignTokenExpiresAt
         };
     }
 
@@ -268,4 +279,38 @@ public class SalesService(
         CreatedAt = lead.CreatedAt,
         UpdatedAt = lead.UpdatedAt
     };
+
+    private async Task VerifyContractOwnershipAsync(Guid salesUserId, Guid contractId, CancellationToken ct)
+    {
+        var contract = await contractRepository.GetByIdAsync(contractId, ct)
+            ?? throw new BusinessException("contract.notFound", 404);
+        var (leads, _) = await leadRepository.GetPagedAsync(salesUserId, null, 1, 1000, ct);
+        var clientUserIds = leads.Where(l => l.ClientUserId.HasValue).Select(l => l.ClientUserId!.Value).ToHashSet();
+        if (!clientUserIds.Contains(contract.InvestorUserId))
+            throw new BusinessException("contract.accessDenied", 403);
+    }
+
+    public async Task CancelContractAsync(Guid salesUserId, Guid contractId, CancellationToken ct = default)
+    {
+        await VerifyContractOwnershipAsync(salesUserId, contractId, ct);
+        await contractService.CancelAsync(contractId, ct);
+    }
+
+    public async Task DeleteContractAsync(Guid salesUserId, Guid contractId, CancellationToken ct = default)
+    {
+        await VerifyContractOwnershipAsync(salesUserId, contractId, ct);
+        await contractService.DeleteAsync(contractId, ct);
+    }
+
+    public async Task ChangeContractClientAsync(Guid salesUserId, Guid contractId, Guid newLeadId, CancellationToken ct = default)
+    {
+        await VerifyContractOwnershipAsync(salesUserId, contractId, ct);
+        // 新客户必须属于该销售的线索，且已关联 ClientUser
+        var (leads, _) = await leadRepository.GetPagedAsync(salesUserId, null, 1, 1000, ct);
+        var newLead = leads.FirstOrDefault(l => l.Id == newLeadId)
+            ?? throw new BusinessException("客户不属于该销售的线索列表。", 400);
+        if (!newLead.ClientUserId.HasValue)
+            throw new BusinessException("该客户尚未创建登录账号，请先完成合同签约。", 400);
+        await contractService.ChangeInvestorAsync(contractId, newLead.ClientUserId.Value, ct);
+    }
 }

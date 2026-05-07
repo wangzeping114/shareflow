@@ -49,6 +49,21 @@ export function getSalesContractDetail(id: string) {
     .then(r => r.data.data)
 }
 
+export function cancelContract(id: string) {
+  return http.post<ApiResponse<null>>(`/v1/sales/contracts/${id}/cancel`)
+    .then(r => r.data)
+}
+
+export function deleteContract(id: string) {
+  return http.delete<ApiResponse<null>>(`/v1/sales/contracts/${id}`)
+    .then(r => r.data)
+}
+
+export function changeContractClient(id: string, newClientId: string) {
+  return http.patch<ApiResponse<null>>(`/v1/sales/contracts/${id}/client`, { newClientId })
+    .then(r => r.data)
+}
+
 export function initiateContract(data: InitiateContractRequest) {
   return http.post<ApiResponse<InitiateContractResult>>('/v1/sales/contracts', data)
     .then(r => r.data.data)

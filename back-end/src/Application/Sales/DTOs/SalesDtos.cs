@@ -48,6 +48,8 @@ public record SalesProjectDto
 public record SalesProjectSlotDto
 {
     public Guid Id { get; init; }
+    public int SlotNumber { get; init; }
+    public string? Alias { get; init; }
     public decimal SharePermille { get; init; }
 }
 
@@ -56,6 +58,8 @@ public record SalesClientDto
     public Guid Id { get; init; }
     public string Name { get; init; } = string.Empty;
     public string Email { get; init; } = string.Empty;
+    /// <summary>该线索小客户是否已创建登录账号</summary>
+    public bool HasAccount { get; init; }
 }
 
 // ───────── Contracts ─────────
@@ -65,6 +69,11 @@ public record InitiateContractRequest
     public Guid ProjectId { get; init; }
     public Guid SlotId { get; init; }
     public Guid InvestorUserId { get; init; }
+}
+
+public record ChangeContractClientRequest
+{
+    public Guid NewClientId { get; init; }
 }
 
 public record InitiateContractResult
@@ -93,6 +102,10 @@ public record SalesContractDetailDto
     public string? ClientUsername { get; init; }
     /// <summary>初始密码（存储在 Lead 上，销售侧永久可见）</summary>
     public string? ClientInitialPassword { get; init; }
+    /// <summary>签约链接（仅 Draft/Sent 状态且 Token 未过期时有值）</summary>
+    public string? SignUrl { get; init; }
+    /// <summary>签约链接过期时间</summary>
+    public DateTime? SignTokenExpiresAt { get; init; }
 }
 
 public record SalesContractDto
@@ -100,6 +113,8 @@ public record SalesContractDto
     public Guid Id { get; init; }
     public string ProjectTitle { get; init; } = string.Empty;
     public Guid SlotId { get; init; }
+    public int SlotNumber { get; init; }
+    public string? SlotAlias { get; init; }
     public decimal SharePermille { get; init; }
     public string ClientName { get; init; } = string.Empty;
     public ContractStatus Status { get; init; }

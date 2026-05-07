@@ -51,6 +51,12 @@ public class ContractService(
         var investor = await userRepository.GetByIdAsync(request.InvestorUserId, ct)
             ?? throw new BusinessException("投资人用户不存在。", 404);
 
+        // 幂等检查：若已存在未签约合同，直接返回其 ID，避免重复创建
+        var existing = await contractRepository.GetActiveUnsignedAsync(
+            request.ProjectId, request.SlotId, request.InvestorUserId, ct);
+        if (existing is not null)
+            return existing.Id;
+
         // 使用槽位自身配置的模板类型（由管理员在创建槽位时设定）
         var templateType = slot.TemplateType;
 
@@ -102,5 +108,55 @@ public class ContractService(
             SignUrl = signUrl,
             ExpiresAt = contract.SignTokenExpiresAt!.Value,
         };
+    }
+
+    public async Task CancelAsync(Guid contractId, CancellationToken ct = default)
+    {
+        var contract = await contractRepository.GetByIdAsync(contractId, ct)
+            ?? throw new BusinessException("合同不存在。", 404);
+        contract.Cancel();
+        await contractRepository.UpdateAsync(contract, ct);
+        await ReleaseSlotAsync(contract.SlotId, ct);
+    }
+
+    public async Task DeleteAsync(Guid contractId, CancellationToken ct = default)
+    {
+        var contract = await contractRepository.GetByIdAsync(contractId, ct)
+            ?? throw new BusinessException("合同不存在。", 404);
+        if (contract.Status == ContractStatus.Signed || contract.Status == ContractStatus.Executed)
+            throw new BusinessException("已签署/执行的合同无法删除。", 400);
+        await contractRepository.DeleteAsync(contract, ct);
+        await ReleaseSlotAsync(contract.SlotId, ct);
+    }
+
+    public async Task ChangeInvestorAsync(Guid contractId, Guid newInvestorUserId, CancellationToken ct = default)
+    {
+        var contract = await contractRepository.GetByIdAsync(contractId, ct)
+            ?? throw new BusinessException("合同不存在。", 404);
+        var investor = await userRepository.GetByIdAsync(newInvestorUserId, ct)
+            ?? throw new BusinessException("用户不存在。", 404);
+        // 如果客户变更，需要释放旧槽位绑定并重新预留
+        if (contract.InvestorUserId != newInvestorUserId)
+        {
+            var slot = await slotRepository.GetByIdAsync(contract.SlotId, ct);
+            if (slot is not null && (slot.Status == SlotStatus.Reserved || slot.Status == SlotStatus.Occupied))
+            {
+                slot.Release();
+                slot.Reserve(newInvestorUserId);
+                await slotRepository.UpdateAsync(slot, ct);
+            }
+        }
+        contract.ChangeInvestor(newInvestorUserId);
+        await contractRepository.UpdateAsync(contract, ct);
+    }
+
+    private async Task ReleaseSlotAsync(Guid slotId, CancellationToken ct)
+    {
+        var slot = await slotRepository.GetByIdAsync(slotId, ct);
+        if (slot is not null && slot.Status != SlotStatus.Available)
+        {
+            slot.Release();
+            await slotRepository.UpdateAsync(slot, ct);
+        }
     }
 }

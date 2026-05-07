@@ -85,4 +85,20 @@ public class ContractRepository(AppDbContext db) : IContractRepository
         db.Contracts.Update(contract);
         await db.SaveChangesAsync(ct);
     }
+
+    public async Task DeleteAsync(Contract contract, CancellationToken ct = default)
+    {
+        db.Contracts.Remove(contract);
+        await db.SaveChangesAsync(ct);
+    }
+
+    public async Task<Contract?> GetActiveUnsignedAsync(Guid projectId, Guid slotId, Guid investorUserId, CancellationToken ct = default)
+        => await db.Contracts
+            .AsNoTracking()
+            .Where(c => c.ProjectId == projectId
+                     && c.SlotId == slotId
+                     && c.InvestorUserId == investorUserId
+                     && (c.Status == ContractStatus.Draft || c.Status == ContractStatus.Sent))
+            .OrderByDescending(c => c.CreatedAt)
+            .FirstOrDefaultAsync(ct);
 }

@@ -106,6 +106,20 @@ public class ProjectService(
         return mapper.Map<SlotDto>(slot);
     }
 
+    public async Task<SlotDto> UpdateSlotAliasAsync(Guid projectId, Guid slotId, UpdateSlotAliasRequest request, CancellationToken ct = default)
+    {
+        var slot = await slotRepository.GetByIdAsync(slotId, ct)
+            ?? throw new BusinessException("槽位不存在。", 404);
+
+        if (slot.ProjectId != projectId)
+            throw new BusinessException("槽位不属于该项目。", 400);
+
+        slot.SetAlias(request.Alias);
+        await slotRepository.UpdateAsync(slot, ct);
+
+        return mapper.Map<SlotDto>(slot);
+    }
+
     public async Task<IReadOnlyList<SlotDto>> BatchUpdateSlotsAsync(Guid projectId, BatchUpdateSlotsRequest request, CancellationToken ct = default)
     {
         if (request.SlotIds is not { Count: > 0 })

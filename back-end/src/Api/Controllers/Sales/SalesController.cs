@@ -70,6 +70,27 @@ public class SalesController(ISalesService salesService) : ControllerBase
         return Ok(ApiResponse<InitiateContractResult>.Success(result));
     }
 
+    [HttpPost("contracts/{id:guid}/cancel")]
+    public async Task<IActionResult> CancelContractAsync(Guid id, CancellationToken ct)
+    {
+        await salesService.CancelContractAsync(CurrentUserId, id, ct);
+        return Ok(ApiResponse<object>.Success(null!));
+    }
+
+    [HttpDelete("contracts/{id:guid}")]
+    public async Task<IActionResult> DeleteContractAsync(Guid id, CancellationToken ct)
+    {
+        await salesService.DeleteContractAsync(CurrentUserId, id, ct);
+        return Ok(ApiResponse<object>.Success(null!));
+    }
+
+    [HttpPatch("contracts/{id:guid}/client")]
+    public async Task<IActionResult> ChangeContractClientAsync(Guid id, [FromBody] ChangeContractClientRequest request, CancellationToken ct)
+    {
+        await salesService.ChangeContractClientAsync(CurrentUserId, id, request.NewClientId, ct);
+        return Ok(ApiResponse<object>.Success(null!));
+    }
+
     [HttpGet("performance")]
     public async Task<IActionResult> GetPerformanceAsync(CancellationToken ct)
     {

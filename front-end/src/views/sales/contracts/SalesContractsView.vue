@@ -16,10 +16,11 @@ import {
   NModal,
   NImage,
   NDivider,
+  NPopconfirm,
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
-import { getSalesProjects, getSalesClients, getSalesContracts, getSalesContractDetail, initiateContract } from '../../../api/sales'
+import { getSalesProjects, getSalesClients, getSalesContracts, getSalesContractDetail, initiateContract, cancelContract, deleteContract, changeContractClient } from '../../../api/sales'
 import type {
   SalesProjectDto,
   SalesClientDto,
@@ -43,6 +44,10 @@ const keyword = ref('')
 const showDetailModal = ref(false)
 const detailLoading = ref(false)
 const contractDetail = ref<SalesContractDetailDto | null>(null)
+const copiedDetail = ref(false)
+const actionLoading = ref(false)
+const showEditClientModal = ref(false)
+const editClientId = ref('')
 
 const form = ref({
   projectId: '',
@@ -273,6 +278,66 @@ function copyLink() {
   }
 }
 
+function copyDetailLink() {
+  if (contractDetail.value?.signUrl) {
+    navigator.clipboard.writeText(contractDetail.value.signUrl)
+    copiedDetail.value = true
+    setTimeout(() => { copiedDetail.value = false }, 2000)
+  }
+}
+
+async function handleCancelContract() {
+  if (!contractDetail.value) return
+  actionLoading.value = true
+  try {
+    await cancelContract(contractDetail.value.id)
+    message.success('合同已撤销')
+    showDetailModal.value = false
+    await refreshContracts()
+  } catch {
+    message.error('撤销失败')
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+async function handleDeleteContract() {
+  if (!contractDetail.value) return
+  actionLoading.value = true
+  try {
+    await deleteContract(contractDetail.value.id)
+    message.success('合同已删除')
+    showDetailModal.value = false
+    await refreshContracts()
+  } catch (e: any) {
+    message.error(e?.response?.data?.message ?? '删除失败')
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+function openEditClientModal() {
+  editClientId.value = ''
+  showEditClientModal.value = true
+}
+
+async function handleChangeClient() {
+  if (!contractDetail.value || !editClientId.value) return
+  actionLoading.value = true
+  try {
+    await changeContractClient(contractDetail.value.id, editClientId.value)
+    message.success('客户已更换')
+    showEditClientModal.value = false
+    // 刷新详情
+    contractDetail.value = await getSalesContractDetail(contractDetail.value.id)
+    await refreshContracts()
+  } catch (e: any) {
+    message.error(e?.response?.data?.message ?? '更换失败')
+  } finally {
+    actionLoading.value = false
+  }
+}
+
 onMounted(load)
 </script>
 
@@ -391,7 +456,7 @@ onMounted(load)
       <div v-if="detailLoading" style="text-align: center; padding: 40px">
         <n-text>加载中...</n-text>
       </div>
-      <template v-else-if="contractDetail">
+      <div v-else-if="contractDetail" style="max-height: 70vh; overflow-y: auto; padding-right: 4px">
         <n-flex vertical :size="16">
           <n-flex>
             <n-text depth="3">项目：</n-text><n-text>{{ contractDetail.projectTitle }}</n-text>
@@ -423,9 +488,24 @@ onMounted(load)
               签署时间：{{ contractDetail.signedAt ? new Date(contractDetail.signedAt).toLocaleString('zh-CN') : '-' }}
             </n-text>
           </div>
-          <div v-else>
+          <div v-if="!contractDetail.signatureDataUrl">
             <n-tag type="warning" size="small">客户尚未签署</n-tag>
           </div>
+
+          <!-- 签约链接（有效期内才显示） -->
+          <template v-if="contractDetail.signUrl">
+            <n-divider />
+            <n-text depth="3" style="display: block; margin-bottom: 8px">签约链接</n-text>
+            <n-input :value="contractDetail.signUrl" readonly style="margin-bottom: 8px" />
+            <n-flex align="center">
+              <n-button size="small" type="primary" @click="copyDetailLink">
+                {{ copiedDetail ? '已复制 ✓' : '复制链接' }}
+              </n-button>
+              <n-text depth="3" style="font-size: 12px">
+                有效期至：{{ contractDetail.signTokenExpiresAt ? new Date(contractDetail.signTokenExpiresAt).toLocaleString('zh-CN') : '-' }}
+              </n-text>
+            </n-flex>
+          </template>
 
           <template v-if="contractDetail.clientUsername">
             <n-divider />
@@ -445,6 +525,52 @@ onMounted(load)
               </n-flex>
             </n-flex>
           </template>
+        </n-flex>
+
+        <!-- 操作区 -->
+        <template v-if="contractDetail.status === 'Draft' || contractDetail.status === 'Sent'">
+          <n-divider />
+          <n-flex :size="8">
+            <n-button size="small" @click="openEditClientModal">更换持股人</n-button>
+            <n-popconfirm @positive-click="handleCancelContract">
+              <template #trigger>
+                <n-button size="small" type="warning" :loading="actionLoading">撤销合同</n-button>
+              </template>
+              确定要撤销合同吗？撤销后槽位将释放。
+            </n-popconfirm>
+            <n-popconfirm @positive-click="handleDeleteContract">
+              <template #trigger>
+                <n-button size="small" type="error" :loading="actionLoading">删除合同</n-button>
+              </template>
+              确定要删除合同吗？此操作不可恢复，槽位将释放。
+            </n-popconfirm>
+          </n-flex>
+        </template>
+      </div>
+    </n-modal>
+
+    <!-- 更换持股人 Modal -->
+    <n-modal v-model:show="showEditClientModal" preset="card" title="更换持股人" style="width: 440px">
+      <n-form label-placement="left" label-width="80">
+        <n-form-item label="新持股人">
+          <n-select
+            v-model:value="editClientId"
+            :options="clients.map(c => ({ label: c.hasAccount ? (c.email ? `${c.name}（${c.email}）` : c.name) : `${c.name}（未开户，不可选）`, value: c.id, disabled: !c.hasAccount }))"
+            filterable
+            clearable
+            placeholder="请选择已有账号的客户"
+          />
+        </n-form-item>
+      </n-form>
+      <template #footer>
+        <n-flex justify="end">
+          <n-button @click="showEditClientModal = false">取消</n-button>
+          <n-button
+            type="primary"
+            :loading="actionLoading"
+            :disabled="!editClientId"
+            @click="handleChangeClient"
+          >确认更换</n-button>
         </n-flex>
       </template>
     </n-modal>

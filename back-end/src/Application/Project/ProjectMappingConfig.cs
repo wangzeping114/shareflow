@@ -21,6 +21,8 @@ public class ProjectMappingConfig : IRegister
             .Map(dest => dest.Slots, src => src.Slots);
 
         config.NewConfig<ProjectSlot, SlotDto>()
+            .Map(dest => dest.SlotNumber, src => src.SlotNumber)
+            .Map(dest => dest.Alias, src => src.Alias)
             .Map(dest => dest.SharePct, src => src.SharePermille)
             .Map(dest => dest.Status, src => src.Status.ToString())
             .Map(dest => dest.TemplateType, src => src.TemplateType);

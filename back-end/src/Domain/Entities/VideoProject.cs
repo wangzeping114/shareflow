@@ -96,10 +96,10 @@ public class VideoProject : Entity<Guid>
     /// <summary>在 Fixed 模式下，创建槽位时每份持股比例由调用方指定。</summary>
     public ProjectSlot AddSlot(decimal sharePermille)
     {
-        if (_slots.Count(s => s.Status != SlotStatus.Released) >= TotalSlots)
+        if (_slots.Count >= TotalSlots)
             throw new InvalidOperationException("已达到总份数上限，无法添加更多槽位。");
 
-        var slot = ProjectSlot.Create(Id, sharePermille);
+        var slot = ProjectSlot.Create(Id, sharePermille, _slots.Count + 1);
         _slots.Add(slot);
         SetUpdatedAt();
         return slot;

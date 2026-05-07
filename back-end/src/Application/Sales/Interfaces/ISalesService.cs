@@ -14,4 +14,10 @@ public interface ISalesService
     Task<SalesContractDetailDto> GetContractDetailAsync(Guid salesUserId, Guid contractId, CancellationToken ct = default);
     Task<InitiateContractResult> InitiateContractAsync(Guid salesUserId, InitiateContractRequest request, CancellationToken ct = default);
     Task<SalesPerformanceDto> GetPerformanceAsync(Guid salesUserId, CancellationToken ct = default);
+    /// <summary>撤销合同，释放槽位</summary>
+    Task CancelContractAsync(Guid salesUserId, Guid contractId, CancellationToken ct = default);
+    /// <summary>删除合同，释放槽位</summary>
+    Task DeleteContractAsync(Guid salesUserId, Guid contractId, CancellationToken ct = default);
+    /// <summary>更换合同绑定的客户</summary>
+    Task ChangeContractClientAsync(Guid salesUserId, Guid contractId, Guid newClientId, CancellationToken ct = default);
 }

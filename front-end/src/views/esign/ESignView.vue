@@ -10,53 +10,82 @@
 
     <template v-else-if="signSuccess">
       <div class="esign-card">
-        <n-result
-          status="success"
-          :title="$t('contract.signSuccess')"
-          :description="$t('contract.signSuccessDesc')"
-        />
-        <template v-if="signResult?.clientUsername && signResult?.initialPassword">
-          <n-alert type="warning" title="请保存您的登录账号，此密码仅显示一次" style="margin-top: 16px">
-            您的持股客户小程序登录账号已创建，请立即记录下方信息并修改密码。
-          </n-alert>
-          <n-card style="margin-top: 12px">
-            <n-flex vertical :size="10">
-              <n-flex align="center">
-                <n-text style="width: 72px; color: #666">用户名</n-text>
-                <n-input :value="signResult.clientUsername" readonly style="flex: 1; font-family: monospace" />
+        <!-- 境外英文模板：全英文提示 -->
+        <template v-if="isOverseasTemplate">
+          <n-result
+            status="success"
+            title="Contract Signed Successfully"
+            description="Your signature has been submitted. The contract PDF is being generated."
+          />
+          <template v-if="signResult?.clientUsername && signResult?.initialPassword">
+            <n-alert type="warning" title="Save your login credentials — password shown only once" style="margin-top: 16px">
+              Your shareholding portal account has been created. Please record the information below and change your password upon first login.
+            </n-alert>
+            <n-card style="margin-top: 12px">
+              <n-flex vertical :size="10">
+                <n-flex align="center">
+                  <n-text style="width: 100px; color: #666">Username</n-text>
+                  <n-input :value="signResult.clientUsername" readonly style="flex: 1; font-family: monospace" />
+                </n-flex>
+                <n-flex align="center">
+                  <n-text style="width: 100px; color: #666">Initial Password</n-text>
+                  <n-input :value="signResult.initialPassword" readonly style="flex: 1; font-family: monospace" />
+                </n-flex>
               </n-flex>
-              <n-flex align="center">
-                <n-text style="width: 72px; color: #666">初始密码</n-text>
-                <n-input :value="signResult.initialPassword" readonly style="flex: 1; font-family: monospace" />
+            </n-card>
+          </template>
+        </template>
+
+        <!-- 非境外模板（境内中文模板）：中文提示 -->
+        <template v-else>
+          <n-result
+            status="success"
+            :title="$t('contract.signSuccess')"
+            :description="$t('contract.signSuccessDesc')"
+          />
+          <template v-if="signResult?.clientUsername && signResult?.initialPassword">
+            <n-alert type="warning" title="请保存您的登录账号，此密码仅显示一次" style="margin-top: 16px">
+              您的持股客户小程序登录账号已创建，请立即记录下方信息并修改密码。
+            </n-alert>
+            <n-card style="margin-top: 12px">
+              <n-flex vertical :size="10">
+                <n-flex align="center">
+                  <n-text style="width: 72px; color: #666">用户名</n-text>
+                  <n-input :value="signResult.clientUsername" readonly style="flex: 1; font-family: monospace" />
+                </n-flex>
+                <n-flex align="center">
+                  <n-text style="width: 72px; color: #666">初始密码</n-text>
+                  <n-input :value="signResult.initialPassword" readonly style="flex: 1; font-family: monospace" />
+                </n-flex>
               </n-flex>
-            </n-flex>
-          </n-card>
+            </n-card>
+          </template>
         </template>
       </div>
     </template>
 
     <template v-else-if="preview">
       <div class="esign-card">
-        <n-card :title="$t('esign.title')">
+        <n-card :title="isOverseasTemplate ? 'Electronic Contract Signing' : $t('esign.title')">
           <n-descriptions bordered :column="1">
-            <n-descriptions-item :label="$t('contract.projectTitle')">
+            <n-descriptions-item :label="isOverseasTemplate ? 'Project Title' : $t('contract.projectTitle')">
               {{ preview.projectTitle }}
             </n-descriptions-item>
-            <n-descriptions-item :label="$t('contract.investorName')">
+            <n-descriptions-item :label="isOverseasTemplate ? 'Shareholder' : $t('contract.investorName')">
               {{ preview.investorName }}
             </n-descriptions-item>
-            <n-descriptions-item :label="$t('contract.sharePct')">
+            <n-descriptions-item :label="isOverseasTemplate ? 'Share Permille' : $t('contract.sharePct')">
               {{ preview.sharePct }}‰
             </n-descriptions-item>
-            <n-descriptions-item v-if="preview.contractSnapshot" :label="$t('contract.contractSnapshot')">
+            <n-descriptions-item v-if="preview.contractSnapshot" :label="isOverseasTemplate ? 'Contract Summary' : $t('contract.contractSnapshot')">
               <pre class="contract-snapshot">{{ preview.contractSnapshot }}</pre>
             </n-descriptions-item>
           </n-descriptions>
 
           <n-divider />
 
-          <p class="signature-label">{{ $t('contract.signaturePad') }}</p>
-          <SignaturePad v-model="signatureDataUrl" :width="500" :height="200" />
+          <p class="signature-label">{{ isOverseasTemplate ? 'Please sign below' : $t('contract.signaturePad') }}</p>
+          <SignaturePad v-model="signatureDataUrl" :width="500" :height="200" :clear-label="isOverseasTemplate ? 'Clear' : ''" />
 
           <template #footer>
             <n-space justify="end">
@@ -66,7 +95,7 @@
                 :disabled="!signatureDataUrl"
                 @click="handleSubmit"
               >
-                {{ $t('contract.submitSignature') }}
+                {{ isOverseasTemplate ? 'Submit Signature' : $t('contract.submitSignature') }}
               </n-button>
             </n-space>
           </template>
@@ -77,7 +106,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useMessage, NSpin, NResult, NCard, NDescriptions, NDescriptionsItem, NDivider, NSpace, NButton, NAlert, NFlex, NText, NInput } from 'naive-ui'
 import { useI18n } from 'vue-i18n'
@@ -97,6 +126,9 @@ const signSuccess = ref(false)
 const signResult = ref<SignContractResult | null>(null)
 const preview = ref<ContractPreviewDto | null>(null)
 const signatureDataUrl = ref('')
+
+// 判断是否为境外英文模板，决定签署成功页语言
+const isOverseasTemplate = computed(() => preview.value?.templateType === 'OverseasEnglish')
 
 onMounted(async () => {
   try {

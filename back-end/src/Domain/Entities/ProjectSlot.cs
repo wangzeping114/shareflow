@@ -7,6 +7,12 @@ public class ProjectSlot : Entity<Guid>
 {
     public Guid ProjectId { get; private set; }
 
+    /// <summary>项目内槽位序号，从 1 开始自动递增</summary>
+    public int SlotNumber { get; private set; }
+
+    /// <summary>可选别名，例如 "A座" / "VIP-1"（最长 50 字符）</summary>
+    public string? Alias { get; private set; }
+
     /// <summary>持股千分比，例如 35 表示 3.5%（decimal(8,4) 存储时为 3.5000）</summary>
     public decimal SharePermille { get; private set; }
 
@@ -22,19 +28,29 @@ public class ProjectSlot : Entity<Guid>
 
     private ProjectSlot() { }
 
-    public static ProjectSlot Create(Guid projectId, decimal sharePermille)
+    public static ProjectSlot Create(Guid projectId, decimal sharePermille, int slotNumber)
     {
         if (sharePermille <= 0) throw new ArgumentException("持股比例必须大于 0。", nameof(sharePermille));
+        if (slotNumber < 1) throw new ArgumentException("槽位序号必须大于 0。", nameof(slotNumber));
 
         return new ProjectSlot
         {
             Id = Guid.NewGuid(),
             ProjectId = projectId,
+            SlotNumber = slotNumber,
             SharePermille = sharePermille,
             Status = SlotStatus.Available,
             ContractMonths = 12,
             TemplateType = "OverseasEnglish"
         };
+    }
+
+    public void SetAlias(string? alias)
+    {
+        if (alias is not null && alias.Length > 50)
+            throw new ArgumentException("别名最长 50 个字符。", nameof(alias));
+        Alias = string.IsNullOrWhiteSpace(alias) ? null : alias.Trim();
+        SetUpdatedAt();
     }
 
     public void SetContractMonths(int months)
@@ -90,7 +106,7 @@ public class ProjectSlot : Entity<Guid>
     public void Release()
     {
         ClientUserId = null;
-        Status = SlotStatus.Released;
+        Status = SlotStatus.Available;
         SetUpdatedAt();
     }
 }

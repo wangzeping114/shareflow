@@ -1,0 +1,158 @@
+@startuml ShareFlow完整操作流程
+!theme plain
+skinparam backgroundColor #FAFAFA
+skinparam defaultFontName "Microsoft YaHei"
+skinparam ArrowColor #555555
+skinparam NoteBackgroundColor #FFFDE7
+skinparam NoteBorderColor #F9A825
+
+title ShareFlow 完整操作流程（从项目创建到分红到账）
+
+actor "Admin\n管理员" as Admin
+actor "Sales\n销售" as Sales
+actor "Client\n持股客户" as Client
+participant "前端\nVue App" as FE
+participant "后端\nASP.NET API" as API
+participant "PostgreSQL\n数据库" as DB
+participant "领域事件\nMediatR" as Event
+participant "Quartz\nJob调度" as Job
+
+== 阶段一：账号体系初始化 ==
+
+note over API, DB
+  后端启动时自动执行 SeedAsync
+  创建 SuperAdmin 账号（admin / Admin@123456）
+  创建 Sales 账号（sales / Sales@123456）
+end note
+
+API -> DB : INSERT users\n(SuperAdmin + Sales)
+
+== 阶段二：项目管理 ==
+
+Admin -> FE : 登录 admin / Admin@123456
+FE -> API : POST /v1/auth/login
+API --> FE : JWT AccessToken
+
+Admin -> FE : 创建视频项目\n填写名称、平台、槽位模式、持股比例
+FE -> API : POST /v1/admin/projects
+API -> DB : INSERT video_projects
+API -> DB : INSERT project_slots\n(每个槽位 SharePermille, Status=Available)
+
+note right of DB
+  槽位状态: Available
+  尚未绑定任何客户
+end note
+
+== 阶段三：创建客户账号 ==
+
+Admin -> FE : 创建客户账号\n（或由 Sales 通过线索流程创建）
+FE -> API : POST /v1/admin/users (role=Client)
+API -> DB : INSERT users (role=Client)
+
+== 阶段四：Sales 创建合同并发送签署链接 ==
+
+Sales -> FE : 登录 sales / Sales@123456
+FE -> API : POST /v1/auth/login
+API --> FE : JWT AccessToken
+
+Sales -> FE : 创建合同\n选择项目、槽位、客户、持股比例
+FE -> API : POST /v1/sales/contracts
+API -> DB : INSERT contracts\n(Status=Draft, SlotId, InvestorUserId)
+API -> DB : UPDATE project_slots\n(Status=Reserved)
+
+Sales -> FE : 发送签署链接给客户
+FE -> API : POST /v1/sales/contracts/{id}/send
+API -> DB : UPDATE contracts\n(Status=Sent, SignToken生成)
+API --> Sales : 返回签署短链接
+
+== 阶段五：客户签署合同 ==
+
+Client -> FE : 打开签署链接（公开页面）
+FE -> API : GET /v1/public/contracts/{signToken}
+API --> FE : 合同详情
+
+Client -> FE : Canvas 手写电子签名\n点击"确认签署"
+FE -> API : POST /v1/public/contracts/{signToken}/sign\n(signatureDataUrl)
+API -> DB : UPDATE contracts\n(Status=Signed, SignedAt=now)
+
+API -> Event : 发布 ContractSignedEvent
+Event -> API : ContractSignedEventHandler
+API -> DB : UPDATE project_slots\n(Status=Occupied, ClientUserId=InvestorId)
+API -> API : 生成合同 PDF (QuestPDF)
+API -> API : 上传 MinIO
+API -> DB : UPDATE contracts\n(Status=Executed, PdfStoragePath)
+
+note right of DB #E8F5E9
+  槽位状态: Occupied ✓
+  ClientUserId 已绑定
+  【分红计算前置条件满足】
+end note
+
+== 阶段六：录入平台收益 ==
+
+Admin -> FE : 进入收益管理\n选择手工/CSV/AI截图录入
+FE -> API : POST /v1/admin/revenues
+API -> DB : INSERT platform_revenues\n(Status=Pending)
+
+Admin -> FE : 审核收益 → 点击"通过"
+FE -> API : POST /v1/admin/revenues/{id}/approve
+API -> DB : UPDATE platform_revenues\n(Status=Approved)
+
+API -> Event : 发布 RevenueApprovedEvent
+Event -> API : RevenueApprovedEventHandler\n自动触发分红计算
+
+== 阶段七：分红计算 ==
+
+API -> DB : 查询该项目 Occupied 槽位
+DB --> API : [槽位列表 + SharePermille]
+
+API -> API : 按每个槽位计算\nDividendAmount =\nRevenueAmount × SharePermille ÷ 1000
+API -> DB : INSERT dividend_records\n(Status=Calculated)
+
+note over Job
+  兜底机制：
+  Quartz Job 每天 02:00 UTC
+  自动补算所有漏算的 Approved 收益
+  Admin 也可在收益列表手动点"补算分红"
+end note
+
+== 阶段八：Admin 确认并分发分红 ==
+
+Admin -> FE : 进入分红管理\n查看 Calculated 记录\n勾选后点击"批量确认"
+FE -> API : POST /v1/admin/dividends/confirm\n(dividendIds[])
+API -> DB : UPDATE dividend_records\n(Status=Confirmed)
+
+Admin -> FE : 勾选 Confirmed 记录\n点击"批量分发"
+FE -> API : POST /v1/admin/dividends/distribute\n(dividendIds[])
+API -> DB : UPDATE dividend_records\n(Status=Distributed)
+
+API -> Event : 发布 DividendDistributedEvent\n(每条分红记录)
+Event -> API : DividendDistributedEventHandler
+
+API -> DB : 查询/创建客户钱包 wallets
+API -> DB : wallet.Credit()\nINSERT wallet_transactions\n(Type=Dividend, Amount)
+
+note right of DB #E8F5E9
+  客户钱包余额增加 ✓
+  wallet_transactions 写入流水记录
+end note
+
+== 阶段九：客户查看分红与钱包 ==
+
+Client -> FE : 登录客户端
+FE -> API : GET /v1/client/dashboard
+API --> FE : 持股项目、分红汇总
+
+Client -> FE : 查看钱包余额与流水
+FE -> API : GET /v1/client/wallet
+API --> FE : 余额 + 交易记录
+
+Client -> FE : 申请提现
+FE -> API : POST /v1/client/withdrawals
+API -> DB : INSERT withdrawal_requests\n(Status=Pending)
+
+Admin -> FE : 审批提现申请\n线下打款后标记完成
+FE -> API : POST /v1/admin/withdrawals/{id}/approve
+API -> DB : wallet.Debit()\nUPDATE withdrawal_requests\n(Status=Approved)
+
+@enduml

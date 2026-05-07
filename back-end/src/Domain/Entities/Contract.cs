@@ -110,4 +110,28 @@ public class Contract : Entity<Guid>
         Status = ContractStatus.Superseded;
         SetUpdatedAt();
     }
+
+    /// <summary>撤销合同（仅允许 Draft / Sent 状态）。</summary>
+    public void Cancel()
+    {
+        if (Status == ContractStatus.Signed || Status == ContractStatus.Executed)
+            throw new BusinessException("已签署/执行的合同无法撤销。", 400);
+        Status = ContractStatus.Expired;
+        SignToken = null;
+        SignTokenExpiresAt = null;
+        SetUpdatedAt();
+    }
+
+    /// <summary>更换持股人（仅允许 Draft / Sent 状态）。</summary>
+    public void ChangeInvestor(Guid newInvestorUserId)
+    {
+        if (Status == ContractStatus.Signed || Status == ContractStatus.Executed)
+            throw new BusinessException("已签署/执行的合同无法更换持股人。", 400);
+        InvestorUserId = newInvestorUserId;
+        // 重置 Token，防止旧链接被新客户使用
+        SignToken = null;
+        SignTokenExpiresAt = null;
+        Status = ContractStatus.Draft;
+        SetUpdatedAt();
+    }
 }

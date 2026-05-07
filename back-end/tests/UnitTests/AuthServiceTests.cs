@@ -139,6 +139,15 @@ public class AuthServiceTests
 
         public Task<IReadOnlyList<User>> GetByRoleAsync(UserRole role, CancellationToken cancellationToken = default)
             => Task.FromResult<IReadOnlyList<User>>(_users.Where(u => u.Role == role).ToList());
+
+        public Task<IReadOnlyList<User>> GetByIdsAsync(IReadOnlyList<Guid> ids, CancellationToken ct = default)
+            => Task.FromResult<IReadOnlyList<User>>(_users.Where(u => ids.Contains(u.Id)).ToList());
+
+        public Task<IReadOnlyList<Guid>> SearchIdsByKeywordAsync(string keyword, CancellationToken ct = default)
+            => Task.FromResult<IReadOnlyList<Guid>>([]);
+
+        public Task<IReadOnlyList<User>> GetInternalUsersAsync(CancellationToken ct = default)
+            => Task.FromResult<IReadOnlyList<User>>([]);
     }
 
     private sealed class FakeRefreshTokenRepository : IRefreshTokenRepository

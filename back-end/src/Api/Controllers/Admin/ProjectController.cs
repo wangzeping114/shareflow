@@ -83,6 +83,17 @@ public class ProjectController(IProjectService projectService) : ControllerBase
         return Ok(ApiResponse<SlotDto>.Success(slot));
     }
 
+    [HttpPatch("{id:guid}/slots/{slotId:guid}/alias")]
+    [Permission("project.write")]
+    public async Task<IActionResult> UpdateSlotAliasAsync(
+        Guid id, Guid slotId,
+        [FromBody] UpdateSlotAliasRequest request,
+        CancellationToken ct)
+    {
+        var slot = await projectService.UpdateSlotAliasAsync(id, slotId, request, ct);
+        return Ok(ApiResponse<SlotDto>.Success(slot));
+    }
+
     [HttpPatch("{id:guid}/slots/batch")]
     [Permission("project.write")]
     public async Task<IActionResult> BatchUpdateSlotsAsync(

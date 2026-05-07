@@ -1,5 +1,6 @@
 using Mapster;
 using MapsterMapper;
+using Microsoft.Extensions.Configuration;
 using ShareFlow.Application.Contracts;
 using ShareFlow.Application.Contracts.DTOs;
 using ShareFlow.Domain.Common;
@@ -63,6 +64,7 @@ public class ContractServiceTests
     public async Task CreateAsync_DomesticRegion_UsesDomesticChineseTemplate()
     {
         var (project, slot, investor) = MakeProjectSlotInvestor();
+        slot.SetTemplateType("DomesticChinese"); // 明确设置槽位模板类型
         var contractRepo = new FakeContractRepository();
         var service = CreateService(contractRepo,
             new FakeVideoProjectRepository(project),
@@ -132,6 +134,28 @@ public class ContractServiceTests
             }, Guid.NewGuid()));
     }
 
+    [Fact]
+    public async Task CreateAsync_DuplicateUnsignedContract_ReturnsExistingIdWithoutInsert()
+    {
+        var (project, slot, investor) = MakeProjectSlotInvestor();
+        var existing = Contract.Create(project.Id, slot.Id, investor.Id, "DomesticChinese");
+        var contractRepo = new FakeContractRepository(existing);
+        var service = CreateService(contractRepo,
+            new FakeVideoProjectRepository(project),
+            new FakeUserRepository(investor),
+            RegionMode.Domestic);
+
+        var returnedId = await service.CreateAsync(new CreateContractRequest
+        {
+            ProjectId = project.Id,
+            SlotId = slot.Id,
+            InvestorUserId = investor.Id,
+        }, Guid.NewGuid());
+
+        Assert.Equal(existing.Id, returnedId);
+        Assert.Single(contractRepo.Contracts); // 没有新建
+    }
+
     // ──────────────────────── GenerateSignLinkAsync ────────────────────────
 
     [Fact]
@@ -178,13 +202,17 @@ public class ContractServiceTests
     {
         var config = new TypeAdapterConfig();
         new ShareFlow.Application.Contracts.ContractMappingConfig().Register(config);
+        var appConfig = new FakeConfiguration(new Dictionary<string, string?>
+            { ["FrontendBaseUrl"] = "http://localhost:5173" });
         return new ContractService(
             contractRepo ?? new FakeContractRepository(),
             projectRepo ?? new FakeVideoProjectRepository(),
             userRepo ?? new FakeUserRepository(),
+            new FakeProjectSlotRepository(),
             new FakeRegionContext(regionMode),
             new FakeContractTemplateService(),
-            new Mapper(config));
+            new Mapper(config),
+            appConfig);
     }
 
     private static (VideoProject project, ProjectSlot slot, User investor) MakeProjectSlotInvestor()
@@ -192,7 +220,7 @@ public class ContractServiceTests
         var project = VideoProject.Create(
             "测试项目", string.Empty, "TikTok", ProjectSlotMode.Fixed, 10, Guid.NewGuid(), 100_000m);
 
-        var slot = ProjectSlot.Create(project.Id, 100m); // 100‰
+        var slot = ProjectSlot.Create(project.Id, 100m, 1); // 100‰
 
         // 通过反射将 slot 插入 project.Slots（绕过 EF 导航属性的 private setter）
         var slotsField = typeof(VideoProject)
@@ -207,6 +235,16 @@ public class ContractServiceTests
     }
 
     // ──────────────────────── Fake Implementations ────────────────────────
+
+    private sealed class FakeProjectSlotRepository : IProjectSlotRepository
+    {
+        public Task<ProjectSlot?> GetByIdAsync(Guid slotId, CancellationToken ct = default) => Task.FromResult<ProjectSlot?>(null);
+        public Task<IReadOnlyList<ProjectSlot>> GetByIdsAsync(IEnumerable<Guid> slotIds, CancellationToken ct = default) => Task.FromResult<IReadOnlyList<ProjectSlot>>([]);
+        public Task<IReadOnlyList<ProjectSlot>> GetByProjectIdAsync(Guid projectId, CancellationToken ct = default) => Task.FromResult<IReadOnlyList<ProjectSlot>>([]);
+        public Task AddAsync(ProjectSlot slot, CancellationToken ct = default) => Task.CompletedTask;
+        public Task UpdateAsync(ProjectSlot slot, CancellationToken ct = default) => Task.CompletedTask;
+        public Task UpdateRangeAsync(IEnumerable<ProjectSlot> slots, CancellationToken ct = default) => Task.CompletedTask;
+    }
 
     private sealed class FakeContractRepository(params Contract[] contracts) : IContractRepository
     {
@@ -236,6 +274,25 @@ public class ContractServiceTests
 
         public Task UpdateAsync(Contract contract, CancellationToken ct = default)
             => Task.CompletedTask;
+
+        public Task DeleteAsync(Contract contract, CancellationToken ct = default)
+        {
+            Contracts.Remove(contract);
+            return Task.CompletedTask;
+        }
+
+        public Task<Contract?> GetActiveUnsignedAsync(Guid projectId, Guid slotId, Guid investorUserId, CancellationToken ct = default)
+            => Task.FromResult(Contracts.FirstOrDefault(c =>
+                c.ProjectId == projectId &&
+                c.SlotId == slotId &&
+                c.InvestorUserId == investorUserId &&
+                (c.Status == ContractStatus.Draft || c.Status == ContractStatus.Sent)));
+
+        public Task<IReadOnlyList<Contract>> GetSignedAsync(CancellationToken ct = default)
+            => Task.FromResult<IReadOnlyList<Contract>>(Contracts.Where(c => c.Status == ContractStatus.Signed || c.Status == ContractStatus.Executed).ToList());
+
+        public Task<IReadOnlyList<Contract>> GetByClientIdAsync(Guid clientUserId, CancellationToken ct = default)
+            => Task.FromResult<IReadOnlyList<Contract>>(Contracts.Where(c => c.InvestorUserId == clientUserId).ToList());
     }
 
     private sealed class FakeVideoProjectRepository(params VideoProject[] projects) : IVideoProjectRepository
@@ -298,6 +355,15 @@ public class ContractServiceTests
 
         public Task<IReadOnlyList<User>> GetByRoleAsync(UserRole role, CancellationToken ct = default)
             => Task.FromResult<IReadOnlyList<User>>(_users.Where(u => u.Role == role).ToList());
+
+        public Task<IReadOnlyList<User>> GetByIdsAsync(IReadOnlyList<Guid> ids, CancellationToken ct = default)
+            => Task.FromResult<IReadOnlyList<User>>(_users.Where(u => ids.Contains(u.Id)).ToList());
+
+        public Task<IReadOnlyList<Guid>> SearchIdsByKeywordAsync(string keyword, CancellationToken ct = default)
+            => Task.FromResult<IReadOnlyList<Guid>>([]);
+
+        public Task<IReadOnlyList<User>> GetInternalUsersAsync(CancellationToken ct = default)
+            => Task.FromResult<IReadOnlyList<User>>([]);
     }
 
     private sealed class FakeRegionContext(RegionMode mode) : IRegionContext
@@ -315,5 +381,31 @@ public class ContractServiceTests
             => $"[TEMPLATE:{templateType}] Project={data.ProjectTitle} Investor={data.InvestorName}";
 
         public string GetRaw(string templateType) => $"[RAW:{templateType}]";
+    }
+
+    private sealed class FakeConfiguration(Dictionary<string, string?> data) : IConfiguration
+    {
+        public string? this[string key]
+        {
+            get => data.TryGetValue(key, out var v) ? v : null;
+            set => data[key] = value;
+        }
+        public IConfigurationSection GetSection(string key)
+            => new FakeConfigurationSection(key, this[key]);
+        public IEnumerable<IConfigurationSection> GetChildren() => [];
+        public Microsoft.Extensions.Primitives.IChangeToken GetReloadToken()
+            => new Microsoft.Extensions.Primitives.CancellationChangeToken(CancellationToken.None);
+    }
+
+    private sealed class FakeConfigurationSection(string key, string? value) : IConfigurationSection
+    {
+        public string? this[string k] { get => null; set { } }
+        public string Key => key;
+        public string Path => key;
+        public string? Value { get => value; set { } }
+        public IConfigurationSection GetSection(string k) => new FakeConfigurationSection(k, null);
+        public IEnumerable<IConfigurationSection> GetChildren() => [];
+        public Microsoft.Extensions.Primitives.IChangeToken GetReloadToken()
+            => new Microsoft.Extensions.Primitives.CancellationChangeToken(CancellationToken.None);
     }
 }

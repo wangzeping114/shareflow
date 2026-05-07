@@ -92,9 +92,16 @@ public record ProjectDetailDto : ProjectDto
 public record SlotDto
 {
     public Guid Id { get; init; }
+    public int SlotNumber { get; init; }
+    public string? Alias { get; init; }
     public decimal SharePct { get; init; }
     public string Status { get; init; } = string.Empty;
     public Guid? ClientUserId { get; init; }
     public int ContractMonths { get; init; }
     public string TemplateType { get; init; } = "OverseasEnglish";
+}
+
+public record UpdateSlotAliasRequest
+{
+    public string? Alias { get; init; }
 }

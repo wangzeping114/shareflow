@@ -14,7 +14,7 @@
       @touchend="stopDraw"
     />
     <div class="signature-pad-actions">
-      <n-button size="small" @click="clear">{{ $t('common.clear') }}</n-button>
+      <n-button size="small" @click="clear">{{ clearLabel || $t('common.clear') }}</n-button>
     </div>
   </div>
 </template>
@@ -26,11 +26,13 @@ import { NButton } from 'naive-ui'
 interface Props {
   width?: number
   height?: number
+  clearLabel?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   width: 500,
   height: 200,
+  clearLabel: '',
 })
 
 const emit = defineEmits<{

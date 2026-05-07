@@ -14,6 +14,8 @@ public class ProjectSlotConfiguration : IEntityTypeConfiguration<ProjectSlot>
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).HasColumnName("id");
         builder.Property(x => x.ProjectId).HasColumnName("project_id");
+        builder.Property(x => x.SlotNumber).HasColumnName("slot_number").HasDefaultValue(0);
+        builder.Property(x => x.Alias).HasColumnName("alias").HasMaxLength(50).IsRequired(false);
         builder.Property(x => x.SharePermille)
             .HasColumnName("share_permille")
             .HasPrecision(8, 4);
