@@ -68,19 +68,27 @@ public class AdminDashboardService(
         var revenueByPlatform = await db.PlatformRevenues
             .Where(r => r.Status == RevenueStatus.Approved)
             .GroupBy(r => r.PlatformName)
-            .Select(g => new NameValueDto(g.Key, g.Sum(r => r.Amount)))
+            .Select(g => new { Name = g.Key, Value = g.Sum(r => r.Amount) })
             .OrderByDescending(x => x.Value)
             .ToListAsync(ct);
+
+        var revenueByPlatformDtos = revenueByPlatform
+            .Select(x => new NameValueDto(x.Name, x.Value))
+            .ToList();
 
         // ── 各项目分红 Top 10 ────────────────────────────────────────────
         var dividendByProject = await db.DividendRecords
             .Where(d => d.Status == DividendStatus.Distributed)
             .Join(db.VideoProjects, d => d.ProjectId, p => p.Id, (d, p) => new { p.Title, d.DividendAmount })
             .GroupBy(x => x.Title)
-            .Select(g => new NameValueDto(g.Key, g.Sum(x => x.DividendAmount)))
+            .Select(g => new { Name = g.Key, Value = g.Sum(x => x.DividendAmount) })
             .OrderByDescending(x => x.Value)
             .Take(10)
             .ToListAsync(ct);
+
+        var dividendByProjectDtos = dividendByProject
+            .Select(x => new NameValueDto(x.Name, x.Value))
+            .ToList();
 
         // ── 合同状态分布 ─────────────────────────────────────────────────
         var contractStatusDist = await db.Contracts
@@ -92,6 +100,6 @@ public class AdminDashboardService(
             .Select(x => new NameValueDto(x.Status, x.Count))
             .ToList();
 
-        return new AdminDashboardDto(kpi, months, revenueByPlatform, dividendByProject, contractDtos);
+        return new AdminDashboardDto(kpi, months, revenueByPlatformDtos, dividendByProjectDtos, contractDtos);
     }
 }

@@ -40,6 +40,12 @@ const statusTagType: Record<string, 'default' | 'info' | 'warning' | 'success'> 
   Distributed: 'success',
 }
 
+function dividendStatusLabel(row: ClientDividendDto) {
+  const key = `client.dividendStatus.${row.status}`
+  const label = t(key)
+  return label === key ? row.statusLabel : label
+}
+
 const columns: DataTableColumns<ClientDividendDto> = [
   { title: t('client.col.project'), key: 'projectTitle', ellipsis: { tooltip: true } },
   { title: t('client.col.platform'), key: 'platformName', width: 160 },
@@ -66,7 +72,7 @@ const columns: DataTableColumns<ClientDividendDto> = [
     title: t('client.col.status'),
     key: 'status',
     width: 100,
-    render: row => h(NTag, { type: statusTagType[row.status] ?? 'default', size: 'small' }, () => row.statusLabel),
+    render: row => h(NTag, { type: statusTagType[row.status] ?? 'default', size: 'small' }, () => dividendStatusLabel(row)),
   },
   {
     title: t('client.col.date'),

@@ -42,6 +42,29 @@ function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString(clientLocale, { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
+const dividendStatusLabelKey: Record<string, string> = {
+  Calculated: 'client.dividendStatus.Calculated',
+  Confirmed: 'client.dividendStatus.Confirmed',
+  Distributed: 'client.dividendStatus.Distributed',
+  待确认: 'client.dividendStatus.Calculated',
+  待发放: 'client.dividendStatus.Confirmed',
+  已到账: 'client.dividendStatus.Distributed',
+  'Pending Confirmation': 'client.dividendStatus.Calculated',
+  'Pending Distribution': 'client.dividendStatus.Confirmed',
+  Credited: 'client.dividendStatus.Distributed',
+}
+
+function dividendStatusLabel(statusLabel: string) {
+  const key = dividendStatusLabelKey[statusLabel]
+  return key ? t(key) : statusLabel
+}
+
+function contractStatusLabel(status: string) {
+  const key = `contract.status.${status}`
+  const label = t(key)
+  return label === key ? status : label
+}
+
 const projectColumns = computed<DataTableColumns<ClientProjectSummaryDto>>(() => [
   { title: t('client.col.project'), key: 'projectTitle', ellipsis: { tooltip: true } },
   { title: t('client.col.platform'), key: 'platformName', width: 160 },
@@ -57,7 +80,12 @@ const projectColumns = computed<DataTableColumns<ClientProjectSummaryDto>>(() =>
     width: 160,
     render: row => `${row.totalDividendReceived.toFixed(2)} ${row.currency}`,
   },
-  { title: t('client.col.contractStatus'), key: 'contractStatus', width: 130 },
+  {
+    title: t('client.col.contractStatus'),
+    key: 'contractStatus',
+    width: 130,
+    render: row => contractStatusLabel(row.contractStatus),
+  },
 ])
 
 const dividendColumns = computed<DataTableColumns<ClientRecentDividendDto>>(() => [
@@ -68,7 +96,12 @@ const dividendColumns = computed<DataTableColumns<ClientRecentDividendDto>>(() =
     width: 160,
     render: row => `${row.dividendAmount.toFixed(2)} ${row.currency}`,
   },
-  { title: t('client.col.status'), key: 'statusLabel', width: 100 },
+  {
+    title: t('client.col.status'),
+    key: 'statusLabel',
+    width: 100,
+    render: row => dividendStatusLabel(row.statusLabel),
+  },
   {
     title: t('client.col.date'),
     key: 'calculatedAt',

@@ -13,8 +13,11 @@ public class ClientDashboardService(
     IDividendRepository dividendRepository,
     IContractRepository contractRepository,
     IVideoProjectRepository projectRepository,
-    IStorageService storageService) : IClientDashboardService
+    IStorageService storageService,
+    IRegionContext regionContext) : IClientDashboardService
 {
+    private readonly bool _useEnglish = ClientTextLocalizer.UseEnglish(regionContext);
+
     public async Task<ClientDashboardDto> GetDashboardAsync(Guid clientUserId, CancellationToken ct = default)
     {
         // 顺序拉取（EF Core DbContext 不支持并发操作）
@@ -74,7 +77,7 @@ public class ClientDashboardService(
             ProjectTitle = projectMap.GetValueOrDefault(d.ProjectId, "—"),
             DividendAmount = d.DividendAmount,
             Currency = d.Currency,
-            StatusLabel = GetDividendStatusLabel(d.Status),
+            StatusLabel = ClientTextLocalizer.GetDividendStatusLabel(d.Status, _useEnglish),
             CalculatedAt = d.CalculatedAt,
         }).ToList();
 
@@ -119,7 +122,7 @@ public class ClientDashboardService(
                 DividendAmount = d.DividendAmount,
                 Currency = d.Currency,
                 Status = d.Status.ToString(),
-                StatusLabel = GetDividendStatusLabel(d.Status),
+                StatusLabel = ClientTextLocalizer.GetDividendStatusLabel(d.Status, _useEnglish),
                 CalculatedAt = d.CalculatedAt,
             };
         }).ToList();
@@ -140,7 +143,7 @@ public class ClientDashboardService(
             PlatformName = c.Project?.PlatformName ?? "—",
             SharePermille = c.Slot?.SharePermille ?? 0,
             Status = c.Status.ToString(),
-            StatusLabel = GetContractStatusLabel(c.Status),
+            StatusLabel = ClientTextLocalizer.GetContractStatusLabel(c.Status, _useEnglish),
             SignedAt = c.SignedAt,
             HasPdf = !string.IsNullOrEmpty(c.PdfStoragePath),
         }).ToList();
@@ -160,27 +163,4 @@ public class ClientDashboardService(
         // 返回 MinIO 预签名 URL，有效期 1 小时
         return await storageService.GetPresignedUrlAsync(contract.PdfStoragePath, 3600, ct);
     }
-
-    // ── Helpers ───────────────────────────────────────────────
-
-    private static string GetDividendStatusLabel(DividendStatus s) => s switch
-    {
-        DividendStatus.Calculated => "待确认",
-        DividendStatus.Confirmed  => "待发放",
-        DividendStatus.Distributed => "已到账",
-        _ => s.ToString(),
-    };
-
-    private static string GetContractStatusLabel(ContractStatus s) => s switch
-    {
-        ContractStatus.Draft        => "草稿",
-        ContractStatus.Sent         => "待签署",
-        ContractStatus.Signed       => "已签署",
-        ContractStatus.Executed     => "生效中",
-        ContractStatus.Expired      => "已到期",
-        ContractStatus.PendingRenew => "等待续签",
-        ContractStatus.Renewing     => "续签中",
-        ContractStatus.Superseded   => "已取代",
-        _ => s.ToString(),
-    };
 }

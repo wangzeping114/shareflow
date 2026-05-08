@@ -99,6 +99,36 @@ const statusTagMap: Record<WithdrawalStatus, { type: 'default' | 'info' | 'warni
   Rejected:  { type: 'error',   label: t('client.withdrawal.statusRejected') },
   Completed: { type: 'success', label: t('client.withdrawal.statusCompleted') },
 }
+
+const transactionTypeKey: Record<string, string> = {
+  Dividend: 'client.transaction.type.Dividend',
+  AdminCredit: 'client.transaction.type.AdminCredit',
+  Withdrawal: 'client.transaction.type.Withdrawal',
+}
+
+const transactionRemarkKey: Record<string, string> = {
+  '分红到账': 'client.transaction.remark.dividendCredited',
+  'Dividend credited': 'client.transaction.remark.dividendCredited',
+  '提现已完成': 'client.transaction.remark.withdrawalCompleted',
+  'Withdrawal completed': 'client.transaction.remark.withdrawalCompleted',
+  '提现已拒绝，余额退回': 'client.transaction.remark.withdrawalRejected',
+  'Withdrawal rejected, balance returned': 'client.transaction.remark.withdrawalRejected',
+}
+
+function transactionTypeLabel(tx: WalletTransactionDto) {
+  const key = transactionTypeKey[tx.type]
+  return key ? t(key) : tx.typeLabel
+}
+
+function transactionRemark(tx: WalletTransactionDto) {
+  const key = transactionRemarkKey[tx.remark]
+  return key ? t(key) : tx.remark
+}
+
+function transactionTitle(tx: WalletTransactionDto) {
+  const directionLabel = tx.direction === 'In' ? '+' : '-'
+  return `${transactionTypeLabel(tx)}  ${directionLabel}${tx.amount.toFixed(2)} ${tx.currency}`
+}
 </script>
 
 <template>
@@ -148,8 +178,8 @@ const statusTagMap: Record<WithdrawalStatus, { type: 'default' | 'info' | 'warni
           v-for="tx in txList"
           :key="tx.id"
           :type="tx.direction === 'In' ? 'success' : 'error'"
-          :title="`${tx.typeLabel}  ${tx.directionLabel}${tx.amount.toFixed(2)} ${tx.currency}`"
-          :content="tx.remark"
+          :title="transactionTitle(tx)"
+          :content="transactionRemark(tx)"
           :time="fmtDateTime(tx.createdAt)"
         />
       </NTimeline>

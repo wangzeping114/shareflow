@@ -154,6 +154,23 @@ const messages = {
         statusRejected: '已拒绝',
         statusCompleted: '已完成',
       },
+      transaction: {
+        type: {
+          Dividend: '分红到账',
+          AdminCredit: '管理员充值',
+          Withdrawal: '提现',
+        },
+        remark: {
+          dividendCredited: '分红到账',
+          withdrawalCompleted: '提现已完成',
+          withdrawalRejected: '提现已拒绝，余额退回',
+        },
+      },
+      dividendStatus: {
+        Calculated: '待确认',
+        Confirmed: '待发放',
+        Distributed: '已到账',
+      },
     },
   },
   'en-US': {
@@ -307,6 +324,23 @@ const messages = {
         statusApproved: 'Approved',
         statusRejected: 'Rejected',
         statusCompleted: 'Completed',
+      },
+      transaction: {
+        type: {
+          Dividend: 'Dividend',
+          AdminCredit: 'Admin Credit',
+          Withdrawal: 'Withdrawal',
+        },
+        remark: {
+          dividendCredited: 'Dividend credited',
+          withdrawalCompleted: 'Withdrawal completed',
+          withdrawalRejected: 'Withdrawal rejected, balance returned',
+        },
+      },
+      dividendStatus: {
+        Calculated: 'Pending Confirmation',
+        Confirmed: 'Pending Distribution',
+        Distributed: 'Credited',
       },
     },
   },

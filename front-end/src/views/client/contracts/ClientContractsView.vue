@@ -59,6 +59,12 @@ const statusTagType: Record<string, 'default' | 'info' | 'success' | 'warning' |
   Superseded:   'default',
 }
 
+function contractStatusLabel(row: ClientContractDto) {
+  const key = `contract.status.${row.status}`
+  const label = t(key)
+  return label === key ? row.statusLabel : label
+}
+
 const columns: DataTableColumns<ClientContractDto> = [
   { title: t('client.col.project'), key: 'projectTitle', ellipsis: { tooltip: true } },
   { title: t('client.col.platform'), key: 'platformName', width: 160 },
@@ -73,7 +79,7 @@ const columns: DataTableColumns<ClientContractDto> = [
     key: 'status',
     width: 110,
     render: row => h(NTag, { type: statusTagType[row.status] ?? 'default', size: 'small' },
-      () => row.statusLabel),
+      () => contractStatusLabel(row)),
   },
   {
     title: t('client.col.signedDate'),
