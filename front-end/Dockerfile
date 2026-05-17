@@ -1,10 +1,10 @@
 # 基于官方 Node 镜像构建前端
 FROM node:20 AS build
 WORKDIR /app
-COPY front-end/package.json ./
-COPY front-end/pnpm-lock.yaml ./
+COPY package.json ./
+COPY pnpm-lock.yaml ./
 RUN npm install -g pnpm && pnpm install
-COPY front-end/ .
+COPY . .
 RUN pnpm build
 
 FROM nginx:alpine
