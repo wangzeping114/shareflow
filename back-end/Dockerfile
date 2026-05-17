@@ -5,12 +5,12 @@ EXPOSE 80
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
-COPY back-end/ShareFlow.sln ./
-COPY back-end/src/Api/ ./Api/
-COPY back-end/src/Application/ ./Application/
-COPY back-end/src/Domain/ ./Domain/
-COPY back-end/src/Infrastructure/ ./Infrastructure/
-COPY back-end/src/Migrator/ ./Migrator/
+COPY ShareFlow.sln ./
+COPY src/Api/ ./Api/
+COPY src/Application/ ./Application/
+COPY src/Domain/ ./Domain/
+COPY src/Infrastructure/ ./Infrastructure/
+COPY src/Migrator/ ./Migrator/
 RUN dotnet restore ./Api/ShareFlow.Api.csproj
 RUN dotnet publish ./Api/ShareFlow.Api.csproj -c Release -o /app/publish
 
