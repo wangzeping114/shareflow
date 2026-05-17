@@ -11,7 +11,7 @@ const messages = {
     },
     auth: {
       title: '账号登录',
-      subtitle: '使用 ShareFlow 账号访问管理后台或客户端门户。',
+      subtitle: '使用 ShareFlow 账号访问管理后台或客户端门户。 🚀',
       username: '用户名',
       password: '密码',
       usernamePlaceholder: '请输入用户名',
