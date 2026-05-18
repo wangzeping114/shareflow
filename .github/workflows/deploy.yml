@@ -28,8 +28,8 @@ jobs:
             set -e
             cd /var/www/shareflow
 
-            echo ">>> 修复目录所有权..."
-            sudo chown -R $USER:$USER /var/www/shareflow
+            echo ">>> 修复目录所有权（排除 data/ 避免破坏 PostgreSQL 文件权限）..."
+            sudo chown $USER:$USER /var/www/shareflow
             git config --global --add safe.directory /var/www/shareflow
 
             echo ">>> 拉取最新代码..."
