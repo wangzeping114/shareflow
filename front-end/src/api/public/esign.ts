@@ -2,9 +2,9 @@ import axios from 'axios'
 import type { ApiResponse } from '../../types/auth'
 import type { ContractPreviewDto, SubmitSignatureRequest, SignContractResult } from '../../types/contract'
 
-// 公开接口不携带认证 token
+// 公开接口不携带认证 token，使用相对路径由 nginx 代理
 const publicHttp = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5001',
+  baseURL: '',
   timeout: 15000,
 })
 
