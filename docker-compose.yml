@@ -95,6 +95,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB_OVERSEAS}
     volumes:
       - ./data/pgdata-overseas:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
     networks:
       - shareflow-net
     healthcheck:
@@ -112,6 +114,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB_DOMESTIC}
     volumes:
       - ./data/pgdata-domestic:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5433:5432"
     networks:
       - shareflow-net
     healthcheck:
