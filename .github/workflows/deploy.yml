@@ -39,10 +39,10 @@ jobs:
             docker compose up -d --build
 
             echo ">>> 执行数据库迁移（境外实例）..."
-            docker compose exec -T shareflow-api-overseas dotnet ShareFlow.Migrator.dll || true
+            docker compose run --rm migrator-overseas
 
             echo ">>> 执行数据库迁移（境内实例）..."
-            docker compose exec -T shareflow-api-domestic dotnet ShareFlow.Migrator.dll || true
+            docker compose run --rm migrator-domestic
 
             echo ">>> 容器状态："
             docker compose ps

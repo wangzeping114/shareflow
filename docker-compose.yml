@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   shareflow-api-overseas:
     build:
@@ -54,6 +52,40 @@ services:
     networks:
       - shareflow-net
     restart: always
+
+  migrator-overseas:
+    image: mcr.microsoft.com/dotnet/sdk:8.0
+    working_dir: /src
+    environment:
+      - ConnectionStrings__Default=Host=postgres-overseas;Port=5432;Database=${POSTGRES_DB_OVERSEAS};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+    volumes:
+      - ./back-end:/src
+    command: >
+      sh -lc "dotnet tool install --global dotnet-ef --version 8.* &&
+      export PATH=$PATH:/root/.dotnet/tools &&
+      dotnet ef database update --project src/Migrator --startup-project src/Api"
+    depends_on:
+      postgres-overseas:
+        condition: service_healthy
+    networks:
+      - shareflow-net
+
+  migrator-domestic:
+    image: mcr.microsoft.com/dotnet/sdk:8.0
+    working_dir: /src
+    environment:
+      - ConnectionStrings__Default=Host=postgres-domestic;Port=5432;Database=${POSTGRES_DB_DOMESTIC};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+    volumes:
+      - ./back-end:/src
+    command: >
+      sh -lc "dotnet tool install --global dotnet-ef --version 8.* &&
+      export PATH=$PATH:/root/.dotnet/tools &&
+      dotnet ef database update --project src/Migrator --startup-project src/Api"
+    depends_on:
+      postgres-domestic:
+        condition: service_healthy
+    networks:
+      - shareflow-net
 
   postgres-overseas:
     image: postgres:16
