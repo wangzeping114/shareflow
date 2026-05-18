@@ -134,6 +134,3 @@ services:
 networks:
   shareflow-net:
     driver: bridge
-
-volumes:
-  # 数据已使用 bind mount（./data/），无需 named volumes
