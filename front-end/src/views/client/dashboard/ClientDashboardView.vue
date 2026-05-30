@@ -13,13 +13,11 @@ import { CanvasRenderer } from 'echarts/renderers'
 import { BarChart, PieChart } from 'echarts/charts'
 import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components'
 import { getClientDashboard } from '../../../api/client/dashboard'
-import { useRegion } from '../../../composables/use-region'
 import type { ClientDashboardDto, ClientProjectSummaryDto, ClientRecentDividendDto } from '../../../types/client'
 
 use([CanvasRenderer, BarChart, PieChart, GridComponent, TooltipComponent, LegendComponent])
 
-const { t } = useI18n()
-const { clientLocale } = useRegion()
+const { t, locale } = useI18n()
 const router = useRouter()
 const dashboard = ref<ClientDashboardDto | null>(null)
 const loading = ref(false)
@@ -39,7 +37,7 @@ onMounted(fetchDashboard)
 const cur = computed(() => dashboard.value?.currency ?? 'USD')
 
 function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString(clientLocale, { year: 'numeric', month: 'short', day: 'numeric' })
+  return new Date(iso).toLocaleDateString(locale.value, { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
 const dividendStatusLabelKey: Record<string, string> = {
@@ -115,7 +113,7 @@ const portfolioOption = computed(() => ({
   tooltip: { trigger: 'item', formatter: '{b}: {d}%' },
   legend: { orient: 'vertical', right: 8, top: 'center', type: 'scroll' },
   series: [{
-    name: 'Portfolio',
+    name: t('client.chart.portfolioSeries'),
     type: 'pie',
     radius: ['38%', '65%'],
     center: ['38%', '50%'],
@@ -167,7 +165,7 @@ const dividendChartOption = computed(() => {
               </template>
             </n-statistic>
             <div v-if="(dashboard?.frozenAmount ?? 0) > 0" style="margin-top: 8px; font-size: 12px; color: #f0a020">
-              Frozen: {{ dashboard!.frozenAmount.toFixed(2) }} {{ cur }}
+              {{ t('client.frozenBalance') }}: {{ dashboard!.frozenAmount.toFixed(2) }} {{ cur }}
             </div>
           </n-card>
         </n-gi>
@@ -202,12 +200,12 @@ const dividendChartOption = computed(() => {
       <!-- 图表行：持股占比 + 各项目分红 -->
       <n-grid v-if="(dashboard?.projects.length ?? 0) > 0" :x-gap="16" :cols="2">
         <n-gi>
-          <n-card title="Portfolio Breakdown">
+          <n-card :title="t('client.chart.portfolioBreakdown')">
             <v-chart :option="portfolioOption" style="height:240px" autoresize />
           </n-card>
         </n-gi>
         <n-gi>
-          <n-card title="Dividends Earned by Project">
+          <n-card :title="t('client.chart.dividendByProject')">
             <v-chart :option="dividendChartOption" style="height:240px" autoresize />
           </n-card>
         </n-gi>

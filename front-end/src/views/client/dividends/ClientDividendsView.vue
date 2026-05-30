@@ -6,14 +6,12 @@ import {
   type DataTableColumns,
 } from 'naive-ui'
 import { getClientDividends } from '../../../api/client/dashboard'
-import { useRegion } from '../../../composables/use-region'
 import type { ClientDividendDto } from '../../../types/client'
 
-const { t } = useI18n()
-const { clientLocale } = useRegion()
+const { t, locale } = useI18n()
 
 function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString(clientLocale, { year: 'numeric', month: 'short', day: 'numeric' })
+  return new Date(iso).toLocaleDateString(locale.value, { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
 const list = ref<ClientDividendDto[]>([])

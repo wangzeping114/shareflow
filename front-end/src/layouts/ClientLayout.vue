@@ -3,46 +3,94 @@ import { h, computed, onMounted } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import {
   NLayout, NLayoutSider, NLayoutHeader, NLayoutContent,
-  NMenu, NFlex, NText, NButton, NAvatar,
+  NMenu, NFlex, NText, NButton, NAvatar, NSelect,
   NMessageProvider, NDialogProvider, NNotificationProvider, NConfigProvider,
-  enUS, dateEnUS, zhCN, dateZhCN,
+  enUS, dateEnUS, zhCN, dateZhCN, jaJP, dateJaJP, koKR, dateKoKR,
   type MenuOption,
 } from 'naive-ui'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import { useRegion } from '../composables/use-region'
 
-const { locale } = useI18n()
-const { clientLocale } = useRegion()
-onMounted(() => { locale.value = clientLocale })
+const CLIENT_LOCALE_STORAGE_KEY = 'shareflow_client_locale'
+
+const { locale, t } = useI18n()
+const { clientLocale, clientSupportedLocales } = useRegion()
+onMounted(() => {
+  const persistedLocale = localStorage.getItem(CLIENT_LOCALE_STORAGE_KEY)
+  const isSupported = persistedLocale && (clientSupportedLocales as readonly string[]).includes(persistedLocale)
+  locale.value = isSupported ? persistedLocale : clientLocale
+})
 
 const authStore = useAuthStore()
 const router = useRouter()
 const route = useRoute()
 
 const activeKey = computed(() => route.name as string | null)
-const isCN = computed(() => locale.value === 'zh-CN')
-const naiveLocale = computed(() => isCN.value ? zhCN : enUS)
-const naiveDateLocale = computed(() => isCN.value ? dateZhCN : dateEnUS)
+
+const localeOptions = computed(() => [
+  { label: t('client.locale.zhCN'), value: 'zh-CN' },
+  { label: t('client.locale.enUS'), value: 'en-US' },
+  { label: t('client.locale.jaJP'), value: 'ja-JP' },
+  { label: t('client.locale.koKR'), value: 'ko-KR' },
+  { label: t('client.locale.viVN'), value: 'vi-VN' },
+])
+
+function handleLocaleChange(nextLocale: string) {
+  locale.value = nextLocale
+  localStorage.setItem(CLIENT_LOCALE_STORAGE_KEY, nextLocale)
+}
+
+const naiveLocale = computed(() => {
+  if (locale.value === 'zh-CN') {
+    return zhCN
+  }
+
+  if (locale.value === 'ja-JP') {
+    return jaJP
+  }
+
+  if (locale.value === 'ko-KR') {
+    return koKR
+  }
+
+  return enUS
+})
+
+const naiveDateLocale = computed(() => {
+  if (locale.value === 'zh-CN') {
+    return dateZhCN
+  }
+
+  if (locale.value === 'ja-JP') {
+    return dateJaJP
+  }
+
+  if (locale.value === 'ko-KR') {
+    return dateKoKR
+  }
+
+  return dateEnUS
+})
 
 const menuOptions: MenuOption[] = [
   {
-    label: () => h('span', 'Dashboard'),
+    label: () => h('span', t('client.menu.dashboard')),
     key: 'client-dashboard',
     icon: () => h('span', { style: 'font-size:16px' }, '📊'),
   },
   {
-    label: () => h('span', isCN.value ? '分红记录' : 'Dividends'),
+    label: () => h('span', t('client.menu.dividends')),
     key: 'client-dividends',
     icon: () => h('span', { style: 'font-size:16px' }, '💰'),
   },
   {
-    label: () => h('span', isCN.value ? '我的合同' : 'Contracts'),
+    label: () => h('span', t('client.menu.contracts')),
     key: 'client-contracts',
     icon: () => h('span', { style: 'font-size:16px' }, '📄'),
   },
   {
-    label: () => h('span', isCN.value ? '钱包' : 'Wallet'),
+    label: () => h('span', t('client.menu.wallet')),
     key: 'client-wallet',
     icon: () => h('span', { style: 'font-size:16px' }, '💳'),
   },
@@ -84,7 +132,7 @@ async function handleLogout() {
               <div class="brand">
                 <n-text strong style="color: #3b82f6; font-size: 16px">ShareFlow</n-text>
                 <n-text depth="3" style="font-size: 11px; display: block">
-                  {{ isCN ? '持股门户' : 'Investor Portal' }}
+                  {{ t('client.portalTitle') }}
                 </n-text>
               </div>
               <n-menu
@@ -99,12 +147,19 @@ async function handleLogout() {
             <n-layout>
               <n-layout-header bordered style="padding: 0 24px; height: 56px; background: #fff">
                 <n-flex align="center" justify="end" style="height: 100%">
+                  <n-select
+                    :value="locale"
+                    :options="localeOptions"
+                    size="small"
+                    style="width: 150px; margin-right: 6px;"
+                    @update:value="handleLocaleChange"
+                  />
                   <n-text depth="2">{{ authStore.user?.displayName }}</n-text>
                   <n-avatar round size="small" style="background: #3b82f6">
                     {{ authStore.user?.displayName?.charAt(0) ?? 'C' }}
                   </n-avatar>
                   <n-button text @click="handleLogout" style="color: #999">
-                    {{ isCN ? '退出登录' : 'Logout' }}
+                    {{ t('app.logout') }}
                   </n-button>
                 </n-flex>
               </n-layout-header>

@@ -7,17 +7,15 @@ import {
   NPagination, useMessage,
 } from 'naive-ui'
 import { getMyWallet, getMyTransactions, requestWithdrawal, getMyWithdrawals } from '../../../api/public/wallet'
-import { useRegion } from '../../../composables/use-region'
 import type { WalletDto, WalletTransactionDto, WithdrawalRequestDto, WithdrawalStatus } from '../../../types/wallet'
 
-const { t } = useI18n()
-const { clientLocale } = useRegion()
+const { t, locale } = useI18n()
 
 function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString(clientLocale, { year: 'numeric', month: 'short', day: 'numeric' })
+  return new Date(iso).toLocaleDateString(locale.value, { year: 'numeric', month: 'short', day: 'numeric' })
 }
 function fmtDateTime(iso: string) {
-  return new Date(iso).toLocaleString(clientLocale, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+  return new Date(iso).toLocaleString(locale.value, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
 const message = useMessage()
