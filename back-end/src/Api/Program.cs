@@ -155,6 +155,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
+app.UseMiddleware<OverseasBackendAccessRestrictionMiddleware>();
 app.UseSerilogRequestLogging();
 app.UseCors();
 app.UseAuthentication();
