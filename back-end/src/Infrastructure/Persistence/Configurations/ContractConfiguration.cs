@@ -12,6 +12,10 @@ public class ContractConfiguration : IEntityTypeConfiguration<Contract>
 
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).HasColumnName("id");
+        builder.Property(x => x.ContractNo)
+            .HasColumnName("contract_no")
+            .HasDefaultValueSql("nextval('contract_no_seq')")
+            .ValueGeneratedOnAdd();
         builder.Property(x => x.ProjectId).HasColumnName("project_id");
         builder.Property(x => x.SlotId).HasColumnName("slot_id");
         builder.Property(x => x.InvestorUserId).HasColumnName("investor_user_id");
@@ -36,6 +40,7 @@ public class ContractConfiguration : IEntityTypeConfiguration<Contract>
 
         builder.HasIndex(x => x.SignToken).IsUnique().HasFilter("sign_token IS NOT NULL")
             .HasDatabaseName("ix_contracts_sign_token");
+        builder.HasIndex(x => x.ContractNo).IsUnique().HasDatabaseName("ix_contracts_contract_no");
         builder.HasIndex(x => x.ProjectId).HasDatabaseName("ix_contracts_project_id");
         builder.HasIndex(x => x.InvestorUserId).HasDatabaseName("ix_contracts_investor_user_id");
         builder.HasIndex(x => x.Status).HasDatabaseName("ix_contracts_status");

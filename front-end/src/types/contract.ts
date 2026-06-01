@@ -10,6 +10,7 @@ export type ContractStatus =
 
 export interface ContractDto {
   id: string
+  contractNo: number
   projectId: string
   projectTitle: string
   slotId: string
@@ -40,6 +41,7 @@ export interface ContractPreviewDto {
 }
 
 export interface GenerateSignLinkResult {
+  contractNo: number
   signUrl: string
   expiresAt: string
 }

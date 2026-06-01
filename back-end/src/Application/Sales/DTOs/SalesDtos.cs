@@ -79,6 +79,7 @@ public record ChangeContractClientRequest
 public record InitiateContractResult
 {
     public Guid ContractId { get; init; }
+    public int ContractNo { get; init; }
     public string SignUrl { get; init; } = string.Empty;
     public DateTime ExpiresAt { get; init; }
     /// <summary>仅首次创建账号时非 null</summary>
@@ -90,6 +91,7 @@ public record InitiateContractResult
 public record SalesContractDetailDto
 {
     public Guid Id { get; init; }
+    public int ContractNo { get; init; }
     public string ProjectTitle { get; init; } = string.Empty;
     public string ClientName { get; init; } = string.Empty;
     public string Status { get; init; } = string.Empty;
@@ -111,6 +113,7 @@ public record SalesContractDetailDto
 public record SalesContractDto
 {
     public Guid Id { get; init; }
+    public int ContractNo { get; init; }
     public string ProjectTitle { get; init; } = string.Empty;
     public Guid SlotId { get; init; }
     public int SlotNumber { get; init; }

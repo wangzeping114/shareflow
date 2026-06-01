@@ -34,6 +34,7 @@ public record SubmitSignatureRequest
 public record ContractDto
 {
     public Guid Id { get; init; }
+    public int ContractNo { get; init; }
     public Guid ProjectId { get; init; }
     public string ProjectTitle { get; init; } = string.Empty;
     public Guid SlotId { get; init; }
@@ -58,6 +59,7 @@ public record ContractDetailDto : ContractDto
 /// <summary>生成签约链接后返回给管理员的结果</summary>
 public record GenerateSignLinkResult
 {
+    public int ContractNo { get; init; }
     public string SignUrl { get; init; } = string.Empty;
     public DateTime ExpiresAt { get; init; }
 }

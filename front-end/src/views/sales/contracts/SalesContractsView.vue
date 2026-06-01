@@ -206,6 +206,7 @@ const filteredContracts = computed(() => {
     return contract.projectTitle.toLowerCase().includes(trimmedKeyword)
       || contract.slotId.toLowerCase().includes(trimmedKeyword)
       || contract.clientName.toLowerCase().includes(trimmedKeyword)
+      || String(contract.contractNo).padStart(3, '0').includes(trimmedKeyword)
       || contract.id.toLowerCase().includes(trimmedKeyword)
   })
 })
@@ -219,11 +220,15 @@ function filterPendingSign() {
   filterStatus.value = 'Sent'
 }
 
+function formatContractNo(contractNo: number) {
+  return String(contractNo).padStart(3, '0')
+}
+
 const columns: DataTableColumns<SalesContractDto> = [
   {
     title: '合同编号',
-    key: 'id',
-    render: row => row.id.slice(0, 8),
+    key: 'contractNo',
+    render: row => formatContractNo(row.contractNo),
   },
   {
     title: '所属项目',
@@ -421,6 +426,10 @@ onMounted(load)
           合同已创建，请将下方链接发送给客户（微信/WhatsApp）
         </n-alert>
 
+        <n-text depth="3" style="display: block; margin-bottom: 8px">
+          合同编号：{{ formatContractNo(result.contractNo) }}
+        </n-text>
+
         <n-input :value="result.signUrl" readonly style="margin-bottom: 12px" />
 
         <n-flex>
@@ -459,7 +468,8 @@ onMounted(load)
       <div v-else-if="contractDetail" style="max-height: 70vh; overflow-y: auto; padding-right: 4px">
         <n-flex vertical :size="16">
           <n-flex>
-            <n-text depth="3">项目：</n-text><n-text>{{ contractDetail.projectTitle }}</n-text>
+            <n-text depth="3">编号：</n-text><n-text>{{ formatContractNo(contractDetail.contractNo) }}</n-text>
+            <n-text depth="3" style="margin-left: 24px">项目：</n-text><n-text>{{ contractDetail.projectTitle }}</n-text>
             <n-text depth="3" style="margin-left: 24px">客户：</n-text><n-text>{{ contractDetail.clientName }}</n-text>
             <n-text depth="3" style="margin-left: 24px">持股比例：</n-text>
             <n-text>{{ (contractDetail.sharePermille / 10).toFixed(2) }}%</n-text>

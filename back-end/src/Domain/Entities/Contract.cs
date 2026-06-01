@@ -5,6 +5,9 @@ namespace ShareFlow.Domain.Entities;
 
 public class Contract : Entity<Guid>
 {
+    /// <summary>合同顺序号（数据库序列生成）。前端可格式化为 001、002。</summary>
+    public int ContractNo { get; private set; }
+
     public Guid ProjectId { get; private set; }
     public Guid SlotId { get; private set; }
     public Guid InvestorUserId { get; private set; }

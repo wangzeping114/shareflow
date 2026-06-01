@@ -65,6 +65,7 @@ export interface InitiateContractRequest {
 
 export interface InitiateContractResult {
   contractId: string
+  contractNo: number
   signUrl: string
   expiresAt: string
   /** 仅首次创建账号时存在 */
@@ -75,6 +76,7 @@ export interface InitiateContractResult {
 
 export interface SalesContractDetailDto {
   id: string
+  contractNo: number
   projectTitle: string
   clientName: string
   status: string
@@ -101,6 +103,7 @@ export type SalesContractStatus =
 
 export interface SalesContractDto {
   id: string
+  contractNo: number
   projectTitle: string
   slotId: string
   slotNumber: number

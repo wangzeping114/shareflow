@@ -124,6 +124,7 @@ public class SalesService(
             .Select(x => new SalesContractDto
             {
                 Id = x.Id,
+                ContractNo = x.ContractNo,
                 ProjectTitle = x.Project?.Title ?? string.Empty,
                 SlotId = x.SlotId,
                 SlotNumber = x.Slot?.SlotNumber ?? 0,
@@ -165,6 +166,7 @@ public class SalesService(
         return new SalesContractDetailDto
         {
             Id = contract.Id,
+            ContractNo = contract.ContractNo,
             ProjectTitle = contract.Project?.Title ?? string.Empty,
             ClientName = clientLead?.Name ?? string.Empty,
             Status = contract.Status.ToString(),
@@ -225,6 +227,7 @@ public class SalesService(
         return new InitiateContractResult
         {
             ContractId = contractId,
+            ContractNo = signResult.ContractNo,
             SignUrl = signResult.SignUrl,
             ExpiresAt = signResult.ExpiresAt,
             ClientUsername = newClientUsername,

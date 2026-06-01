@@ -105,6 +105,7 @@ public class ContractService(
 
         return new GenerateSignLinkResult
         {
+            ContractNo = contract.ContractNo,
             SignUrl = signUrl,
             ExpiresAt = contract.SignTokenExpiresAt!.Value,
         };
