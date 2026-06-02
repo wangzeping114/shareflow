@@ -25,3 +25,8 @@ export function getContractPdfPath(contractId: string) {
   return http.get<ApiResponse<{ path: string | null }>>(`/v1/client/contracts/${contractId}/pdf-path`)
     .then(r => r.data.data)
 }
+
+export function getContractPdfPreviewBlob(contractId: string) {
+  return http.get<Blob>(`/v1/client/contracts/${contractId}/pdf-preview`, { responseType: 'blob' })
+    .then(r => r.data)
+}

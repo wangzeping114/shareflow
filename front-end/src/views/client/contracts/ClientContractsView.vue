@@ -5,7 +5,7 @@ import {
   NDataTable, NSpin, NTag, NButton, useMessage,
   type DataTableColumns,
 } from 'naive-ui'
-import { getClientContracts, getContractPdfPath } from '../../../api/client/dashboard'
+import { getClientContracts, getContractPdfPreviewBlob } from '../../../api/client/dashboard'
 import type { ClientContractDto } from '../../../types/client'
 
 const { t, locale } = useI18n()
@@ -29,16 +29,19 @@ async function fetchList() {
 }
 onMounted(fetchList)
 
-async function downloadPdf(row: ClientContractDto) {
+async function previewPdf(row: ClientContractDto) {
   if (!row.hasPdf) { message.warning(t('client.noPdfAvailable')); return }
   downloadingIds.value.add(row.id)
   try {
-    const result = await getContractPdfPath(row.id)
-    if (result?.path) {
-      window.open(result.path, '_blank')
-    } else {
+    const blob = await getContractPdfPreviewBlob(row.id)
+    if (blob.size <= 0) {
       message.warning(t('client.pdfNotReady'))
+      return
     }
+
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener,noreferrer')
+    setTimeout(() => URL.revokeObjectURL(url), 60000)
   } catch {
     message.error(t('client.fetchLinkFailed'))
   } finally {
@@ -93,7 +96,7 @@ const columns: DataTableColumns<ClientContractDto> = [
       size: 'small',
       disabled: !row.hasPdf || downloadingIds.value.has(row.id),
       loading: downloadingIds.value.has(row.id),
-      onClick: () => downloadPdf(row),
+      onClick: () => previewPdf(row),
     }, () => t('client.downloadPdf')),
   },
 ]

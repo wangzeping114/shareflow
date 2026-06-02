@@ -160,7 +160,19 @@ public class ClientDashboardService(
         if (string.IsNullOrEmpty(contract.PdfStoragePath))
             return null;
 
-        // 返回 MinIO 预签名 URL，有效期 1 小时
-        return await storageService.GetPresignedUrlAsync(contract.PdfStoragePath, 3600, ct);
+        // 统一返回后端预览路由，避免把 MinIO 内网地址暴露给浏览器。
+        return $"/v1/client/contracts/{contractId}/pdf-preview";
+    }
+
+    public async Task<byte[]?> GetContractPdfContentAsync(Guid contractId, Guid clientUserId, CancellationToken ct = default)
+    {
+        var contract = await contractRepository.GetByIdAsync(contractId, ct);
+        if (contract is null || contract.InvestorUserId != clientUserId)
+            throw new BusinessException("contract.notFound");
+
+        if (string.IsNullOrEmpty(contract.PdfStoragePath))
+            return null;
+
+        return await storageService.DownloadAsync(contract.PdfStoragePath, ct);
     }
 }

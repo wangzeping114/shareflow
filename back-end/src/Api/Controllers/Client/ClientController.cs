@@ -46,4 +46,18 @@ public class ClientController(IClientDashboardService dashboardService) : Contro
         var path = await dashboardService.GetContractPdfPathAsync(id, CurrentUserId, ct);
         return Ok(ApiResponse<object>.Success(new { path }));
     }
+
+    /// <summary>预览合同 PDF（仅本人合同）</summary>
+    [HttpGet("contracts/{id:guid}/pdf-preview")]
+    public async Task<IActionResult> PreviewContractPdfAsync(Guid id, CancellationToken ct)
+    {
+        var content = await dashboardService.GetContractPdfContentAsync(id, CurrentUserId, ct);
+        if (content is null)
+        {
+            return NotFound(ApiResponse<object>.Fail("pdf.notFound", 404));
+        }
+
+        Response.Headers.ContentDisposition = $"inline; filename=contract-{id}.pdf";
+        return File(content, "application/pdf");
+    }
 }

@@ -57,4 +57,16 @@ public class MinioStorageService : IStorageService
             .WithObject(objectName)
             .WithExpiry(expirySeconds));
     }
+
+    public async Task<byte[]> DownloadAsync(string objectName, CancellationToken ct = default)
+    {
+        using var output = new MemoryStream();
+
+        await _client.GetObjectAsync(new GetObjectArgs()
+            .WithBucket(_bucketName)
+            .WithObject(objectName)
+            .WithCallbackStream(stream => stream.CopyTo(output)), ct);
+
+        return output.ToArray();
+    }
 }
