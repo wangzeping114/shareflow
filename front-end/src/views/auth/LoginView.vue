@@ -25,6 +25,9 @@ const schema = z.object({
 
 async function handleSubmit() {
   errorMessage.value = ''
+
+  form.username = form.username.trim()
+
   const parsed = schema.safeParse(form)
   if (!parsed.success) {
     errorMessage.value = parsed.error.issues[0]?.message ?? t('auth.loginFailed')
@@ -37,8 +40,8 @@ async function handleSubmit() {
     await authStore.login(form.username, form.password)
     const dest = authStore.homePath
     await router.replace(dest ?? '/admin')
-  } catch {
-    errorMessage.value = t('auth.loginFailed')
+  } catch (e: any) {
+    errorMessage.value = e?.response?.data?.message ?? t('auth.loginFailed')
   } finally {
     loading.value = false
   }
