@@ -16,5 +16,8 @@ RUN dotnet publish ./Api/ShareFlow.Api.csproj -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends fonts-noto-cjk \
+	&& rm -rf /var/lib/apt/lists/*
 COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "ShareFlow.Api.dll"]

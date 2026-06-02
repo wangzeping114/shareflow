@@ -43,7 +43,9 @@ public class PdfGeneratorService(IContractRepository contractRepo) : IPdfGenerat
             {
                 page.Size(PageSizes.A4);
                 page.Margin(40);
-                page.DefaultTextStyle(x => x.FontSize(10));
+                page.DefaultTextStyle(x => x
+                    .FontFamily("Noto Sans CJK SC", "Noto Sans CJK TC", "Noto Sans CJK JP", "Noto Sans CJK KR", "Arial Unicode MS", "Microsoft YaHei", "SimSun")
+                    .FontSize(10));
 
                 page.Header().Column(col =>
                 {
